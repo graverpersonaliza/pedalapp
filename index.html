@@ -1,0 +1,4012 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d4ff3b" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+  <title>PedalApp</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="./firebase-config.js"></script>
+  <script src="./app-config.js"></script>
+  <style>
+    :root{
+      --bg:#0a0f16;
+      --panel:#101826;
+      --panel-2:#162234;
+      --line:#253247;
+      --text:#eef4ff;
+      --muted:#9fb0c9;
+      --accent:#d4ff3b;
+      --danger:#ff6b6b;
+      --ok:#7cffb2;
+      --shadow:0 18px 45px rgba(0,0,0,.28);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#08111d 0%,#0a0f16 100%);color:var(--text)}
+    body.public-clean .tabs{display:none}
+    body.public-clean .topbar{justify-content:flex-start}
+    body.public-clean .brand p{max-width:760px}
+    .wrap{max-width:1220px;margin:0 auto;padding:18px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .brand h1{margin:0;font-size:30px;letter-spacing:.4px}
+    .brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);padding:8px;border-radius:22px;box-shadow:var(--shadow)}
+    .tab-btn{border:none;border-radius:14px;padding:10px 14px;font-weight:700;cursor:pointer;background:transparent;color:var(--text);min-width:116px}
+    .tab-btn.admin-mini,.tab-btn.dev-mini{min-width:auto;padding:8px 12px;font-size:12px;opacity:.86;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+    .tab-btn.admin-mini{margin-left:4px}
+    .tab-btn.active{background:var(--accent);color:#111;opacity:1;border-color:transparent}
+    .grid{display:grid;grid-template-columns:1.12fr .88fr;gap:18px}
+    .card{background:linear-gradient(180deg,rgba(22,34,52,.96),rgba(16,24,38,.96));border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+    .card h2,.card h3{margin:0 0 12px}
+    .muted{color:var(--muted)}
+    .hidden{display:none !important}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+    .row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    label{display:block;margin:0 0 7px;color:var(--muted);font-size:13px;font-weight:700}
+    input,textarea,select{width:100%;padding:12px 13px;background:#0c1522;color:var(--text);border:1px solid var(--line);border-radius:12px;outline:none;font-size:14px}
+    textarea{min-height:92px;resize:vertical}
+    input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;background:var(--accent);color:#111;min-height:40px}
+    .btn.secondary{background:#1e2a3d;color:var(--text);border:1px solid #32425a}
+    .btn.ghost{background:transparent;color:var(--text);border:1px solid #32425a}
+    .btn.danger{background:var(--danger);color:#111}
+    .btn[disabled],.btn.disabled{opacity:.55;cursor:not-allowed;filter:saturate(.35)}
+    .mini{padding:6px 8px;min-height:28px;font-size:12px;line-height:1.1;border-radius:10px}
+    .notice{margin-top:12px;padding:12px 14px;border-radius:12px;font-weight:700;font-size:14px;background:#102318;border:1px solid rgba(124,255,178,.22);color:var(--ok)}
+    .notice.error{background:#291415;border-color:rgba(255,107,107,.2);color:#ffb0b0}
+    .event-box{border:1px solid var(--line);border-radius:14px;padding:14px;background:#0b1421}
+    .link-line{padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#0c1522;word-break:break-all;font-size:13px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:11px 8px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:14px;vertical-align:top}
+    th{color:#d7e0ef;font-size:13px}
+    .table-wrap{overflow:auto}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#0d1724;border:1px solid var(--line);font-size:13px;color:var(--muted);font-weight:700}
+    .stack{display:flex;flex-direction:column;gap:14px}
+    .small{font-size:12px}
+    .subtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:18px}
+    .subtab-btn{border:none;border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer;background:#0c1522;color:var(--text);border:1px solid var(--line)}
+    .subtab-btn.active{background:var(--accent);color:#111;border-color:transparent}
+    .empty{padding:16px;border-radius:14px;border:1px dashed #33445e;color:var(--muted);background:#0b1421;text-align:center;font-weight:700}
+    .inline-actions{display:flex;gap:6px;flex-wrap:nowrap;align-items:center;white-space:nowrap}
+    .edit-box{margin-top:14px;padding:14px;border-radius:14px;border:1px solid var(--line);background:#0b1421}
+    .actions-cell{white-space:nowrap;width:1%}
+    a.link-accent{color:#d4ff3b;text-decoration:none}
+
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.metric-card{padding:14px;border-radius:16px;background:#0b1421;border:1px solid var(--line)}
+.metric-card .k{font-size:28px;font-weight:800;line-height:1;margin-bottom:6px}
+.metric-card .t{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.checkline{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:#0c1522;border:1px solid var(--line);font-weight:700;color:var(--text)}
+.checkline input{width:auto;transform:scale(1.2)}
+.dev-notes{display:grid;gap:12px}
+.dev-note{padding:14px;border-radius:14px;background:#0b1421;border:1px solid var(--line)}
+.client-link-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .file-hint{font-size:12px;color:var(--muted);margin-top:8px}
+    .attachments-wrap{display:grid;gap:10px;margin-top:12px}
+    .attachment-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:#0c1522;border:1px solid var(--line)}
+    .attachment-item img{width:58px;height:58px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+    .attachment-meta{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+    .attachment-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .attachment-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .attachment-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#0d1724;border:1px solid var(--line);font-size:13px;color:var(--text);text-decoration:none}
+    .thumb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px}
+    .thumb-card{border:1px solid var(--line);border-radius:14px;background:#0c1522;overflow:hidden}
+    .thumb-card img{display:block;width:100%;height:130px;object-fit:cover}
+    .thumb-card a{display:block;padding:10px 12px;color:var(--text);text-decoration:none;font-size:13px;font-weight:700}
+    .auth-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+    .auth-row > div:first-child{flex:1 1 220px}
+    .status-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#0d1724;border:1px solid var(--line);font-size:12px;color:var(--muted);font-weight:800;min-height:42px}
+    .status-badge.ok{color:var(--ok);border-color:rgba(124,255,178,.24);background:#102318}
+    .locked-panel{position:relative;opacity:.4;filter:grayscale(.2)}
+    .locked-panel::after{content:'';position:absolute;inset:0;background:rgba(7,11,18,.22);border-radius:inherit;pointer-events:auto}
+    .dev-darkened{position:relative;opacity:.16;filter:grayscale(.9) brightness(.45)}
+    .dev-darkened::after{content:'';position:absolute;inset:0;background:rgba(3,6,12,.68);border-radius:inherit;pointer-events:auto;backdrop-filter:blur(1px)}
+
+    .floating-install{position:fixed;right:18px;bottom:18px;z-index:9999;border:none;border-radius:999px;padding:14px 18px;font-weight:800;cursor:pointer;background:var(--accent);color:#111;box-shadow:var(--shadow)}
+    .floating-install.hidden{display:none !important}
+    .utility-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .utility-card{padding:14px;border-radius:16px;background:#0b1421;border:1px solid var(--line)}
+    .utility-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .table-mini td,.table-mini th{font-size:12px;padding:9px 6px}
+    .warning-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;background:#2b2411;border:1px solid rgba(255,214,102,.24);color:#ffd666;font-size:12px;font-weight:800}
+
+
+    .global-toast{position:fixed;top:10px;left:50%;transform:translateX(-50%) translateY(-14px);width:min(92vw,640px);z-index:10000;padding:10px 12px;border-radius:12px;background:#102318;border:1px solid rgba(124,255,178,.26);color:var(--ok);box-shadow:var(--shadow);font-weight:800;font-size:14px;line-height:1.35;opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+    .global-toast.error{background:#291415;border-color:rgba(255,107,107,.25);color:#ffb0b0}
+    .global-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .scope-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:14px 16px;border-radius:16px;background:rgba(212,255,59,.08);border:1px solid rgba(212,255,59,.22);color:#eff8c5;box-shadow:var(--shadow)}
+    .scope-banner strong{color:#fff}
+    .scope-banner .scope-text{font-size:14px;line-height:1.45;font-weight:700}
+    .scope-banner .scope-actions{display:flex;gap:8px;flex-wrap:wrap}
+    @media (max-width:960px){
+      .wrap{padding:12px}
+      .grid,.row,.row-3,.row-4,.metric-grid,.utility-grid{grid-template-columns:1fr}
+      .topbar{gap:8px;margin-bottom:12px}
+      .brand h1{font-size:26px}
+      .brand p{font-size:13px}
+      .tabs{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));justify-content:stretch;padding:8px;border-radius:18px;gap:8px}
+      .tab-btn,.tab-btn.admin-mini,.tab-btn.dev-mini{width:100%;min-width:0;min-height:42px;padding:10px 12px;font-size:13px;margin-left:0;opacity:1;border-radius:12px}
+      .subtabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border-radius:16px}
+      .subtab-btn{width:100%;min-height:40px;padding:10px 12px;font-size:13px}
+      .card{padding:14px;border-radius:16px}
+      .section-title{gap:8px;margin-bottom:10px}
+      .actions{gap:8px}
+      .btn{padding:10px 12px;min-height:38px;font-size:13px}
+      .mini{min-height:28px;font-size:11px}
+      .auth-row{align-items:stretch}
+      .auth-row > div:first-child{flex:1 1 auto}
+      input,textarea,select{padding:11px 12px;font-size:14px}
+      th,td{font-size:13px;padding:10px 6px}
+      .pill,.status-badge,.warning-badge{width:100%;justify-content:center}
+    }
+
+    @media (max-width:560px){
+      .tabs{grid-template-columns:1fr 1fr}
+      .subtabs{grid-template-columns:1fr}
+      .brand h1{font-size:24px}
+      .topbar{margin-bottom:10px}
+      .link-line{font-size:12px;padding:10px 11px}
+      .attachment-item{padding:9px 10px}
+      .attachment-item img{width:52px;height:52px}
+    }
+  </style>
+</head>
+<body>
+  <div id="globalToast" class="global-toast hidden" role="status" aria-live="polite"></div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <h1 id="brandTitle">PedalApp</h1>
+        <p id="brandSubtitle">Ciclismo e produtos em um só lugar.</p>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn" id="tabInscricaoBtn" onclick="abrirAba('inscricao')">Inscrição</button>
+        <button class="tab-btn" id="tabVestuarioBtn" onclick="abrirAba('vestuario')">Produtos</button>
+        <button class="tab-btn admin-mini active" id="tabAdminBtn" onclick="abrirAba('admin')">Admin</button>
+        <button class="tab-btn dev-mini" id="tabDevBtn" onclick="abrirAba('dev')">Dev</button>
+      </div>
+    </div>
+
+    <div id="accessScopeBanner" class="scope-banner hidden"></div>
+
+    <section id="abaAdmin">
+      <div class="grid">
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h2>Painel do admin</h2>
+              <div class="muted">Crie, edite e compartilhe links de ciclismo, produtos e listas.</div>
+            </div>
+          </div>
+
+          <div class="auth-row" style="margin-bottom:12px">
+            <div>
+              <label>E-mail do admin</label>
+              <input id="adminEmail" type="email" placeholder="Opcional no modo híbrido" autocomplete="username" />
+            </div>
+            <div>
+              <label>Senha do admin</label>
+              <input id="adminSenha" type="password" placeholder="Digite a senha" autocomplete="current-password" />
+            </div>
+            <button class="btn mini secondary" id="adminLoginBtn" onclick="toggleAdminAcesso()">Logar</button>
+            <button class="btn mini ghost" type="button" id="adminResetBtn" onclick="enviarRedefinicaoSenhaAdminCliente('admin')">Redefinir senha</button>
+            <div class="status-badge" id="adminStatus">Acesso restrito</div>
+          </div>
+
+          <div id="adminLockedArea">
+          <div class="subtabs">
+            <button class="subtab-btn active" id="subPedalBtn" onclick="abrirSubAbaAdmin('pedal')">Ciclismo</button>
+            <button class="subtab-btn" id="subRoupasBtn" onclick="abrirSubAbaAdmin('roupas')">Produtos</button>
+            <button class="subtab-btn" id="subHistoricoBtn" onclick="abrirSubAbaAdmin('historico')">Histórico</button>
+          </div>
+
+          <div id="subPedal">
+            <div class="row">
+              <div>
+                <label>Pedal para editar</label>
+                <select id="pedalExistente" onchange="carregarPedalParaEdicao()">
+                  <option value="">Novo pedal</option>
+                </select>
+              </div>
+              <div>
+                <label>Nome do pedal</label>
+                <input id="nomePedal" placeholder="Ex.: Pedal da Serra" />
+              </div>
+            </div>
+
+            <div class="row-4">
+              <div>
+                <label>Data</label>
+                <input id="dataPedal" type="date" />
+              </div>
+              <div>
+                <label>Horário</label>
+                <input id="horarioPedal" type="time" />
+              </div>
+              <div>
+                <label>Ponto de encontro</label>
+                <input id="encontroPedal" placeholder="Ex.: Praça Central" />
+              </div>
+              <div>
+                <label>Cidade</label>
+                <input id="cidadePedal" placeholder="Ex.: Erechim-RS" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Link do trajeto</label>
+                <input id="trajetoPedal" placeholder="Opcional" />
+              </div>
+              <div>
+                <label>Nível sugerido</label>
+                <select id="nivelPedal">
+                  <option value="Leve">Leve</option>
+                  <option value="Moderado">Moderado</option>
+                  <option value="Intermediário">Intermediário</option>
+                  <option value="Avançado">Avançado</option>
+                  <option value="Livre">Livre</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label>Descrição</label>
+              <textarea id="descricaoPedal" placeholder="Informações gerais do pedal"></textarea>
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="salvarPedal()">Salvar pedal</button>
+              <button class="btn secondary" onclick="limparFormularioPedal()">Novo pedal</button>
+              <button class="btn secondary" id="exportInscritosBtn" onclick="exportarInscritosCSV()">Exportar inscritos</button>
+              <button class="btn danger" onclick="excluirPedalAtual()">Excluir pedal</button>
+            </div>
+
+            <div id="msgAdmin"></div>
+          </div>
+
+          <div id="subRoupas" class="hidden">
+            <div class="row">
+              <div>
+                <label>Produto para editar</label>
+                <select id="vestuarioEventoExistente" onchange="carregarVestuarioEventoParaEdicao()">
+                  <option value="">Novo produto</option>
+                </select>
+              </div>
+              <div>
+                <label>Produto da lista</label>
+                <select id="vestuarioProdutoBase">
+                  <option value="">Selecione da lista</option>
+                  <option value="Camisa">Camisa</option>
+                  <option value="Camiseta">Camiseta</option>
+                  <option value="Jersey">Jersey</option>
+                  <option value="Bermuda">Bermuda</option>
+                  <option value="Bretelle">Bretelle</option>
+                  <option value="Jaqueta">Jaqueta</option>
+                  <option value="Colete">Colete</option>
+                  <option value="Manguito">Manguito</option>
+                  <option value="Bandana">Bandana</option>
+                  <option value="Meia">Meia</option>
+                  <option value="Boné">Boné</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Ou escreva o nome do produto</label>
+                <input id="vestuarioEventoNome" placeholder="Ex.: Camisa Equipe 2026" />
+              </div>
+              <div>
+                <label>Data limite</label>
+                <input id="vestuarioEventoData" type="date" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Observação</label>
+                <input id="vestuarioEventoObs" placeholder="Ex.: Escolha de tamanhos até sexta" />
+              </div>
+              <div>
+                <label>Nome final do produto</label>
+                <input id="vestuarioNomePreview" placeholder="Usa o nome digitado ou o item da lista" readonly />
+              </div>
+            </div>
+
+            <div>
+              <label>Descrição</label>
+              <textarea id="vestuarioEventoDescricao" placeholder="Detalhes do produto, tecido, regras, prazo e demais informações"></textarea>
+            </div>
+
+            <input id="vestuarioArquivosInput" type="file" accept="image/*" multiple class="hidden" onchange="selecionarArquivosProduto(event)" />
+
+            <div class="actions">
+              <button class="btn" onclick="salvarVestuarioEvento()">Salvar produto</button>
+              <button class="btn secondary" onclick="limparFormularioVestuarioEvento()">Novo produto</button>
+              <button class="btn secondary" onclick="abrirAnexosProduto()">Anexar arquivos</button>
+              <button class="btn secondary" id="exportVestuarioBtn" onclick="exportarVestuarioCSV()">Baixar pedidos</button>
+              <button class="btn danger" onclick="excluirVestuarioEventoAtual()">Excluir produto</button>
+            </div>
+            <div class="file-hint">Anexe até 5 imagens da grade de tamanhos, referência visual ou acabamento do produto.</div>
+            <div id="listaArquivosProduto" class="attachments-wrap"></div>
+
+            <div id="msgVestuarioAdmin"></div>
+
+            <div id="boxEditarEscolhaVestuario" class="edit-box hidden">
+              <h3>Editar pedido de produto</h3>
+              <div class="row-4">
+                <div>
+                  <label>Nome</label>
+                  <input id="editVestuarioNome" placeholder="Nome da pessoa" />
+                </div>
+                <div>
+                  <label>Produto</label>
+                  <select id="editVestuarioProduto"></select>
+                </div>
+                <div>
+                  <label>Tamanho</label>
+                  <select id="editVestuarioTamanho">
+                    <option value="PP">PP</option>
+                    <option value="P">P</option>
+                    <option value="M">M</option>
+                    <option value="G">G</option>
+                    <option value="GG">GG</option>
+                    <option value="XG">XG</option>
+                    <option value="EXG">EXG</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Quantidade</label>
+                  <input id="editVestuarioQtd" type="number" min="1" value="1" />
+                </div>
+              </div>
+              <div class="row-3">
+                <div>
+                  <label>WhatsApp</label>
+                  <input id="editVestuarioWhats" placeholder="Opcional" />
+                </div>
+                <div>
+                  <label>Observação</label>
+                  <input id="editVestuarioObservacao" placeholder="Opcional" />
+                </div>
+                <div>
+                  <label>&nbsp;</label>
+                  <div class="inline-actions">
+                    <button class="btn" onclick="salvarEdicaoVestuarioEscolha()">Salvar alterações</button>
+                    <button class="btn ghost" onclick="cancelarEdicaoVestuarioEscolha()">Cancelar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div id="pedalCards">
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Link de inscrição</h3>
+                  <div class="muted">Copie ou envie o link do pedal salvo.</div>
+                </div>
+              </div>
+              <div class="event-box">
+                <div class="small muted">Link atual</div>
+                <div class="link-line" id="linkPedal">Salve um pedal para gerar o link.</div>
+                <div class="actions">
+                  <button class="btn mini" onclick="copiarLinkAtual()">Copiar link</button>
+                  <button class="btn mini secondary" onclick="enviarWhatsLink()">Enviar no WhatsApp</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Pedais cadastrados</h3>
+                  <div class="muted">Selecione para editar ou usar na inscrição.</div>
+                </div>
+                <div class="pill"><span id="contadorPedais">0</span> pedal(is)</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Pedal</th><th>Data</th><th>Horário</th><th>Status</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody id="listaPedais"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Inscritos do pedal</h3>
+                  <div class="muted" id="adminInscritosTitulo">Selecione ou salve um pedal para gerenciar os inscritos.</div>
+                </div>
+                <div class="pill"><span id="contadorInscritosAdmin">0</span> inscrito(s)</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Nome</th><th>Nível</th><th>Categoria</th><th>Cidade</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody id="listaInscritosAdmin"></tbody>
+                </table>
+              </div>
+              <div id="emptyInscritosAdmin" class="empty">Selecione um pedal para gerenciar os inscritos.</div>
+
+              <div id="boxEditarInscrito" class="edit-box hidden">
+                <h3>Editar inscrito</h3>
+                <div class="row-4">
+                  <div>
+                    <label>Nome do ciclista</label>
+                    <input id="adminInscritoNome" placeholder="Nome do ciclista" />
+                  </div>
+                  <div>
+                    <label>Nível do ciclista</label>
+                    <select id="adminInscritoNivel">
+                      <option value="Iniciante">Iniciante</option>
+                      <option value="Peba">Peba</option>
+                      <option value="Intermediário">Intermediário</option>
+                      <option value="Veterano">Veterano</option>
+                      <option value="Galático">Galático</option>
+                      <option value="Pró">Pró</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Categoria</label>
+                    <select id="adminInscritoCategoria">
+                      <option value="Cicloturismo">Cicloturismo</option>
+                      <option value="MTB Leve">MTB Leve</option>
+                      <option value="MTB Sport">MTB Sport</option>
+                      <option value="MTB Pró">MTB Pró</option>
+                      <option value="Speed">Speed</option>
+                      <option value="Gravel">Gravel</option>
+                      <option value="E-bike">E-bike</option>
+                      <option value="Apoio">Apoio</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>WhatsApp</label>
+                    <input id="adminInscritoWhats" placeholder="Opcional" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div>
+                    <label>Cidade</label>
+                    <input id="adminInscritoCidade" placeholder="Opcional" />
+                  </div>
+                  <div>
+                    <label>&nbsp;</label>
+                    <div class="inline-actions">
+                      <button class="btn" onclick="salvarEdicaoInscritoAdmin()">Salvar alterações</button>
+                      <button class="btn ghost" onclick="cancelarEdicaoInscritoAdmin()">Cancelar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="msgInscritosAdmin"></div>
+            </div>
+          </div>
+
+          <div id="vestuarioCards" class="hidden">
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Link do produto</h3>
+                  <div class="muted">Copie ou envie o link para o pedido do produto.</div>
+                </div>
+              </div>
+              <div class="event-box">
+                <div class="small muted">Link atual</div>
+                <div class="link-line" id="linkVestuario">Salve um produto para gerar o link.</div>
+                <div class="actions">
+                  <button class="btn mini" onclick="copiarLinkVestuario()">Copiar link</button>
+                  <button class="btn mini secondary" onclick="enviarWhatsLinkVestuario()">Enviar no WhatsApp</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Produtos cadastrados</h3>
+                  <div class="muted">Selecione para editar, anexar referências ou usar no pedido.</div>
+                </div>
+                <div class="pill"><span id="contadorVestuarioEventos">0</span> produto(s)</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Produto</th><th>Data limite</th><th>Status</th><th>Observação</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody id="listaVestuarioEventos"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Pedidos de produtos</h3>
+                  <div class="muted" id="adminVestuarioTitulo">Selecione ou salve um produto para gerenciar os pedidos.</div>
+                </div>
+                <div class="pill"><span id="contadorVestuarioEscolhasAdmin">0</span> pedido(s)</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Nome</th><th>Produto</th><th>Tamanho</th><th>Qtd</th><th>WhatsApp</th><th>Observação</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody id="listaVestuarioEscolhasAdmin"></tbody>
+                </table>
+              </div>
+              <div id="emptyVestuarioAdmin" class="empty">Selecione um produto para gerenciar os pedidos.</div>
+              <div id="msgVestuarioEscolhasAdmin"></div>
+            </div>
+          </div>
+        </div>
+
+
+          <div id="historicoCards" class="hidden">
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Pedais encerrados</h3>
+                  <div class="muted">Eventos finalizados automaticamente pelo prazo.</div>
+                </div>
+                <div class="pill"><span id="contadorHistoricoPedais">0</span> item(ns)</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Pedal</th><th>Data</th><th>Horário</th><th>Status</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody id="listaHistoricoPedais"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="section-title">
+                <div>
+                  <h3>Pedidos encerrados</h3>
+                  <div class="muted">Produtos fora do prazo de pedido.</div>
+                </div>
+                <div class="pill"><span id="contadorHistoricoProdutos">0</span> item(ns)</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Produto</th><th>Data limite</th><th>Status</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody id="listaHistoricoProdutos"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    
+</section>
+
+<section id="abaDev" class="hidden">
+  <div class="grid">
+    <div class="card">
+      <div class="section-title">
+        <div>
+          <h2>Painel do desenvolvedor</h2>
+          <div class="muted">Gerencie clientes, planos, personalização e comercialização do sistema.</div>
+        </div>
+      </div>
+
+      <div class="auth-row" style="margin-bottom:12px">
+        <div>
+          <label>E-mail do desenvolvedor</label>
+          <input id="devEmail" type="email" placeholder="Opcional no modo híbrido" autocomplete="username" />
+        </div>
+        <div>
+          <label>Senha do desenvolvedor</label>
+          <input id="devSenha" type="password" placeholder="Digite a senha" autocomplete="current-password" />
+        </div>
+        <button class="btn mini secondary" id="devLoginBtn" onclick="toggleDevAcesso()">Logar</button>
+        <div class="status-badge" id="devStatus">Acesso restrito</div>
+      </div>
+
+            <div id="devLockedArea">
+      <div class="subtabs">
+        <button class="subtab-btn active" id="subDevClientesBtn" onclick="abrirSubAbaDev('clientes')">Clientes</button>
+        <button class="subtab-btn" id="subDevComercialBtn" onclick="abrirSubAbaDev('comercial')">Comercial</button>
+      </div>
+
+      <div id="subDevClientes">
+        <div class="row">
+          <div>
+            <label>Cliente para editar</label>
+            <select id="clienteExistente" onchange="carregarClienteParaEdicao()">
+              <option value="">Novo cliente</option>
+            </select>
+          </div>
+          <div>
+            <label>Nome do cliente</label>
+            <input id="clienteNome" placeholder="Ex.: Equipe Trilha Forte" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Nome do sistema</label>
+            <input id="clienteSistemaNome" placeholder="Ex.: Trilha Forte Bike" />
+          </div>
+          <div>
+            <label>Slug / acesso</label>
+            <input id="clienteSlug" placeholder="Ex.: trilha-forte-bike" />
+          </div>
+        </div>
+
+        <div class="row-4">
+          <div>
+            <label>Plano</label>
+            <select id="clientePlano">
+              <option value="Demonstração">Demonstração</option>
+              <option value="Básico">Básico</option>
+              <option value="Pro">Pro</option>
+              <option value="Premium">Premium</option>
+              <option value="Vitalício">Vitalício</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="clienteStatus">
+              <option value="Ativo">Ativo</option>
+              <option value="Teste">Teste</option>
+              <option value="Bloqueado">Bloqueado</option>
+            </select>
+          </div>
+          <div>
+            <label>Validade</label>
+            <input id="clienteValidade" type="date" />
+          </div>
+          <div>
+            <label>Cor principal</label>
+            <input id="clienteCor" type="color" value="#d4ff3b" />
+          </div>
+        </div>
+
+        <div class="row-4">
+          <div>
+            <label>Responsável</label>
+            <input id="clienteResponsavel" placeholder="Nome do responsável" />
+          </div>
+          <div>
+            <label>WhatsApp</label>
+            <input id="clienteWhats" placeholder="Contato" />
+          </div>
+          <div>
+            <label>Cidade</label>
+            <input id="clienteCidade" placeholder="Cidade / UF" />
+          </div>
+          <div>
+            <label>Domínio / site</label>
+            <input id="clienteDominio" placeholder="Opcional" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>E-mail do admin do cliente</label>
+            <input id="clienteAdminEmail" type="email" placeholder="E-mail que o cliente vai usar para anexos e login admin" />
+          </div>
+          <div>
+            <label>Modo de acesso</label>
+            <input value="Híbrido / Firebase Auth" disabled />
+          </div>
+        </div>
+        <div class="file-hint">Na V4, ao salvar o cliente com este e-mail, a Cloud Function cria ou atualiza automaticamente o usuário do Firebase Auth para esse cliente. Você também pode enviar a redefinição de senha por e-mail.</div>
+
+        <div class="row">
+          <label class="checkline"><input type="checkbox" id="clienteModCiclismo" checked /> <span>Módulo Ciclismo</span></label>
+          <label class="checkline"><input type="checkbox" id="clienteModVestuario" checked /> <span>Módulo Produtos</span></label>
+        </div>
+        <div class="row">
+          <label class="checkline"><input type="checkbox" id="clienteModExportacao" checked /> <span>Exportação liberada</span></label>
+          <label class="checkline"><input type="checkbox" id="clienteModPersonalizacao" checked /> <span>Personalização visual</span></label>
+        </div>
+
+        <div>
+          <label>Observações comerciais</label>
+          <textarea id="clienteObs" placeholder="Ex.: cliente em teste por 15 dias, suporte via WhatsApp, logo pendente..."></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn" onclick="salvarClienteDev()">Salvar cliente</button>
+          <button class="btn secondary" type="button" onclick="enviarRedefinicaoSenhaAdminCliente('dev')">Redefinir senha do admin</button>
+          <button class="btn secondary" onclick="limparFormularioClienteDev()">Novo cliente</button>
+          <button class="btn danger" onclick="excluirClienteAtualDev()">Excluir cliente</button>
+        </div>
+        <div id="msgDev"></div>
+      </div>
+
+      <div id="subDevComercial" class="hidden">
+        <div class="dev-notes">
+          <div class="dev-note">
+            <h3>Estratégia de venda</h3>
+            <div class="muted">Use uma entrada simples: Demonstração, Básico, Pro e Premium/Vitalício. Isso reduz fricção comercial e facilita upgrade.</div>
+          </div>
+          <div class="dev-note">
+            <h3>Oferta ideal</h3>
+            <div class="muted">Venda para grupos de pedal, assessorias, organizadores, lojas e equipes. Ofereça teste curto, personalização de marca e módulo de vestuário como upgrade.</div>
+          </div>
+          <div class="dev-note">
+            <h3>Operação recomendada</h3>
+            <div class="muted">O desenvolvedor controla planos, validade, módulos e identidade visual. O admin do cliente cuida apenas da rotina do dia a dia.</div>
+          </div>
+          <div class="dev-note">
+            <h3>Provisionamento automático V4</h3>
+            <div class="muted">Ao salvar um cliente com e-mail de admin, a Cloud Function V4 cria ou atualiza automaticamente o usuário no Firebase Auth com senha temporária padrão. Depois o cliente pode trocar a senha.</div>
+          </div>
+          <div class="dev-note">
+            <h3>Próxima evolução</h3>
+            <div class="muted">A próxima camada profissional é login por cliente, domínio próprio, painel de pagamentos e métricas por uso.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div id="devClientesCards">
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h3>Link do cliente</h3>
+              <div class="muted">Gere o acesso comercial com a identidade do cliente.</div>
+            </div>
+          </div>
+          <div class="event-box">
+            <div class="small muted">Link atual do cliente</div>
+            <div class="link-line" id="linkClienteDev">Salve um cliente para gerar o link.</div>
+            <div class="client-link-actions" style="margin-top:12px">
+              <button class="btn mini" onclick="copiarLinkClienteDev()">Copiar link</button>
+              <button class="btn mini secondary" onclick="abrirLinkClienteDev()">Abrir link</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h3>Resumo comercial</h3>
+              <div class="muted">Visão rápida da sua base.</div>
+            </div>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-card"><div class="k" id="metricClientesTotal">0</div><div class="t">Clientes</div></div>
+            <div class="metric-card"><div class="k" id="metricClientesAtivos">0</div><div class="t">Ativos</div></div>
+            <div class="metric-card"><div class="k" id="metricClientesPro">0</div><div class="t">Planos Pro+</div></div>
+            <div class="metric-card"><div class="k" id="metricClientesTeste">0</div><div class="t">Em teste</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h3>Resumo operacional</h3>
+              <div class="muted">Leitura rápida de uso e prontidão da versão 2.</div>
+            </div>
+          </div>
+          <div class="metric-grid">
+            <div class="metric-card"><div class="k" id="metricPedaisTotal">0</div><div class="t">Pedais</div></div>
+            <div class="metric-card"><div class="k" id="metricPedaisAbertos">0</div><div class="t">Pedais abertos</div></div>
+            <div class="metric-card"><div class="k" id="metricProdutosTotal">0</div><div class="t">Produtos</div></div>
+            <div class="metric-card"><div class="k" id="metricProdutosAbertos">0</div><div class="t">Produtos abertos</div></div>
+          </div>
+          <div class="file-hint" id="metricModoAcesso">Modo híbrido ativo. Você pode usar senha simples ou Firebase Auth.</div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h3>Clientes cadastrados</h3>
+              <div class="muted">Clique em editar para ajustar plano, validade e identidade visual.</div>
+            </div>
+            <div class="pill"><span id="contadorClientesDev">0</span> cliente(s)</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Cliente</th><th>Plano</th><th>Status</th><th>Validade</th></tr>
+              </thead>
+              <tbody id="listaClientesDev"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+<section id="abaInscricao" class="hidden">
+      <div class="grid">
+        <div class="stack">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Inscrição</h2>
+                <div class="muted">Escolha o pedal e confirme sua inscrição.</div>
+              </div>
+              <div class="pill"><span id="contadorInscritos">0</span> inscrito(s)</div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Pedal</label>
+                <select id="inscricaoPedalSelect" onchange="trocarPedalInscricao()">
+                  <option value="">Selecione</option>
+                </select>
+              </div>
+              <div>
+                <label>Categoria</label>
+                <select id="categoriaCiclista">
+                  <option value="Cicloturismo">Cicloturismo</option>
+                  <option value="MTB Leve">MTB Leve</option>
+                  <option value="MTB Sport">MTB Sport</option>
+                  <option value="MTB Pró">MTB Pró</option>
+                  <option value="Speed">Speed</option>
+                  <option value="Gravel">Gravel</option>
+                  <option value="E-bike">E-bike</option>
+                  <option value="Apoio">Apoio</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row-4">
+              <div>
+                <label>Nome do ciclista</label>
+                <input id="nomeCiclista" placeholder="Seu nome" />
+              </div>
+              <div>
+                <label>Nível do ciclista</label>
+                <select id="nivelCiclista">
+                  <option value="Iniciante">Iniciante</option>
+                  <option value="Peba">Peba</option>
+                  <option value="Intermediário">Intermediário</option>
+                  <option value="Veterano">Veterano</option>
+                  <option value="Galático">Galático</option>
+                  <option value="Pró">Pró</option>
+                </select>
+              </div>
+              <div>
+                <label>WhatsApp</label>
+                <input id="whatsCiclista" placeholder="Opcional" />
+              </div>
+              <div>
+                <label>Cidade</label>
+                <input id="cidadeCiclista" placeholder="Opcional" />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="inscreverCiclista()">Confirmar inscrição</button>
+            </div>
+            <div id="statusInscricaoPublica"></div>
+            <div id="msgInscricao"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h3>Lista de inscritos</h3>
+                <div class="muted">Atualização em tempo real.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Nome</th><th>Nível</th><th>Categoria</th><th>Cidade</th></tr>
+                </thead>
+                <tbody id="listaInscritos"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h3>Informações do pedal</h3>
+                <div class="muted">Detalhes carregados do pedal escolhido.</div>
+              </div>
+            </div>
+            <div id="infoPedal" class="empty">Escolha um pedal para visualizar as informações.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="abaVestuario" class="hidden">
+      <div class="grid">
+        <div class="stack">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h2>Pedido de produtos</h2>
+                <div class="muted">Escolha o produto criado pelo admin e preencha seus dados.</div>
+              </div>
+              <div class="pill"><span id="contadorVestuarioEscolhas">0</span> pedido(s)</div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Produto</label>
+                <select id="vestuarioEventoSelect" onchange="trocarVestuarioPublico()">
+                  <option value="">Selecione</option>
+                </select>
+              </div>
+              <div>
+                <label>Nome</label>
+                <input id="vestuarioNomePublico" placeholder="Seu nome" />
+              </div>
+            </div>
+
+            <div class="row-4">
+              <div>
+                <label>Tamanho</label>
+                <select id="vestuarioTamanhoPublico">
+                  <option value="PP">PP</option>
+                  <option value="P">P</option>
+                  <option value="M">M</option>
+                  <option value="G">G</option>
+                  <option value="GG">GG</option>
+                  <option value="XG">XG</option>
+                  <option value="EXG">EXG</option>
+                </select>
+              </div>
+              <div>
+                <label>Quantidade</label>
+                <input id="vestuarioQtdPublico" type="number" min="1" value="1" />
+              </div>
+              <div>
+                <label>WhatsApp</label>
+                <input id="vestuarioWhatsPublico" placeholder="Opcional" />
+              </div>
+              <div>
+                <label>Observação</label>
+                <input id="vestuarioObsPublico" placeholder="Opcional" />
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="salvarEscolhaVestuarioPublica()">Enviar pedido</button>
+            </div>
+            <div id="statusPedidoPublico"></div>
+            <div id="msgVestuarioPublico"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h3>Lista de pedidos</h3>
+                <div class="muted">Atualização em tempo real.</div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Nome</th><th>Produto</th><th>Tamanho</th><th>Qtd</th></tr>
+                </thead>
+                <tbody id="listaVestuarioPublico"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h3>Informações do produto</h3>
+                <div class="muted">Detalhes, imagens e referências do produto escolhido.</div>
+              </div>
+            </div>
+            <div id="infoVestuarioEvento" class="empty">Escolha um produto para visualizar as informações.</div>
+            <div id="anexosVestuarioPublico"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const firebaseConfig = window.PEDALAPP_FIREBASE_CONFIG || {
+      apiKey: "AIzaSyDmwj-4I5Vf0QIjMNHMXdR5YkfYzbCDcZU",
+      authDomain: "pedalapp-198b0.firebaseapp.com",
+      projectId: "pedalapp-198b0",
+      storageBucket: "pedalapp-198b0.appspot.com",
+      messagingSenderId: "801611897877",
+      appId: "1:801611897877:web:9a271368af93c23da6421c"
+    };
+
+    const APP_CONFIG = Object.assign({
+      adminPassword: 'admin123',
+      developerPassword: 'Noecreate2026',
+      persistAccess: true
+    }, window.PEDALAPP_APP_CONFIG || {});
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const ADMIN_PASSWORD = APP_CONFIG.adminPassword;
+    const DEVELOPER_PASSWORD = APP_CONFIG.developerPassword;
+    const SESSION_KEY_ADMIN = 'pedalapp_admin_logged';
+    const SESSION_KEY_DEV = 'pedalapp_dev_logged';
+    let isAdminLoggedIn = false;
+    let isDevLoggedIn = false;
+    const DEFAULT_BRAND = { title:'PedalApp', subtitle:'Ciclismo e produtos em um só lugar.', accent:'#d4ff3b' };
+    let pedalAtualCodigo = '';
+    let pedalAtualInscricao = new URLSearchParams(location.search).get('evento') || new URLSearchParams(location.search).get('sala') || '';
+    let vestuarioAtualCodigo = '';
+    let vestuarioAtualPublico = new URLSearchParams(location.search).get('pedido') || new URLSearchParams(location.search).get('vestuario') || '';
+    let clienteSlugAtual = new URLSearchParams(location.search).get('acesso') || new URLSearchParams(location.search).get('user') || new URLSearchParams(location.search).get('cliente') || '';
+    const modoPublico = pedalAtualInscricao ? 'inscricao' : (vestuarioAtualPublico ? 'vestuario' : '');
+    let clienteAtualId = '';
+    let clienteContexto = null;
+
+    let unsubscribeInscritos = null;
+    let unsubscribeInfoPedal = null;
+    let unsubscribeInscritosAdmin = null;
+    let unsubscribeVestuarioInfo = null;
+    let unsubscribeVestuarioPublico = null;
+    let unsubscribeVestuarioEscolhasAdmin = null;
+
+    let cachePedais = [];
+    let cacheInscritosAdmin = [];
+    let cacheVestuarioEventos = [];
+    let cacheVestuarioEscolhasAdmin = [];
+    let cacheVestuarioEscolhasPublico = [];
+    let cacheClientes = [];
+    let inscritoEditId = '';
+    let vestuarioEscolhaEditId = '';
+    let vestuarioEscolhaEditEventoId = '';
+    let produtoArquivosPendentes = [];
+
+    function abrirAba(aba){
+      document.getElementById('abaAdmin').classList.toggle('hidden', aba !== 'admin');
+      document.getElementById('abaInscricao').classList.toggle('hidden', aba !== 'inscricao');
+      document.getElementById('abaVestuario').classList.toggle('hidden', aba !== 'vestuario');
+      document.getElementById('abaDev').classList.toggle('hidden', aba !== 'dev');
+      document.getElementById('tabAdminBtn').classList.toggle('active', aba === 'admin');
+      document.getElementById('tabInscricaoBtn').classList.toggle('active', aba === 'inscricao');
+      document.getElementById('tabVestuarioBtn').classList.toggle('active', aba === 'vestuario');
+      document.getElementById('tabDevBtn').classList.toggle('active', aba === 'dev');
+    }
+
+    function abrirSubAbaAdmin(aba){
+      document.getElementById('subPedal').classList.toggle('hidden', aba !== 'pedal');
+      document.getElementById('subRoupas').classList.toggle('hidden', aba !== 'roupas');
+      document.getElementById('subPedalBtn').classList.toggle('active', aba === 'pedal');
+      document.getElementById('subRoupasBtn').classList.toggle('active', aba === 'roupas');
+      document.getElementById('pedalCards').classList.toggle('hidden', aba !== 'pedal');
+      document.getElementById('vestuarioCards').classList.toggle('hidden', aba !== 'roupas');
+      if(aba === 'pedal') carregarInscritosAdmin(getPedalAdminSelecionado());
+      if(aba === 'roupas') carregarVestuarioEscolhasAdmin(getVestuarioEventoAdminSelecionado());
+    }
+
+    function getPedalAdminSelecionado(){
+      return pedalAtualCodigo || document.getElementById('pedalExistente').value || '';
+    }
+
+    function getVestuarioEventoAdminSelecionado(){
+      return document.getElementById('vestuarioEventoExistente').value || vestuarioAtualCodigo || '';
+    }
+
+    function preencherSelectProdutoPedido(selectedId=''){
+      const select = document.getElementById('editVestuarioProduto');
+      if(!select) return;
+      select.innerHTML = '';
+      cacheVestuarioEventos.forEach(produto => {
+        const option = document.createElement('option');
+        option.value = produto.id;
+        option.textContent = produto.nome || produto.id;
+        select.appendChild(option);
+      });
+      if(selectedId && cacheVestuarioEventos.some(item => item.id === selectedId)){
+        select.value = selectedId;
+      } else if(select.options.length){
+        select.selectedIndex = 0;
+      }
+    }
+
+
+function abrirSubAbaDev(aba){
+  document.getElementById('subDevClientes').classList.toggle('hidden', aba !== 'clientes');
+  document.getElementById('subDevComercial').classList.toggle('hidden', aba !== 'comercial');
+  document.getElementById('subDevClientesBtn').classList.toggle('active', aba === 'clientes');
+  document.getElementById('subDevComercialBtn').classList.toggle('active', aba === 'comercial');
+  document.getElementById('devClientesCards').classList.toggle('hidden', aba !== 'clientes');
+}
+
+function atualizarEstadoAcesso(){
+  const adminArea = document.getElementById('adminLockedArea');
+  const devArea = document.getElementById('devLockedArea');
+  const adminBtn = document.getElementById('adminLoginBtn');
+  const devBtn = document.getElementById('devLoginBtn');
+  const adminStatus = document.getElementById('adminStatus');
+  const devStatus = document.getElementById('devStatus');
+
+  if(adminArea) adminArea.classList.toggle('locked-panel', !isAdminLoggedIn);
+  if(devArea){
+    devArea.classList.toggle('dev-darkened', !isDevLoggedIn);
+    devArea.classList.toggle('locked-panel', false);
+  }
+
+  if(adminBtn) adminBtn.textContent = isAdminLoggedIn ? 'Sair' : 'Logar';
+  if(devBtn) devBtn.textContent = isDevLoggedIn ? 'Sair' : 'Logar';
+
+  if(adminStatus){
+    adminStatus.textContent = isAdminLoggedIn ? 'Admin liberado' : 'Acesso restrito';
+    adminStatus.classList.toggle('ok', isAdminLoggedIn);
+  }
+  if(devStatus){
+    devStatus.textContent = isDevLoggedIn ? 'Desenvolvedor liberado' : 'Acesso restrito';
+    devStatus.classList.toggle('ok', isDevLoggedIn);
+  }
+}
+
+function salvarSessaoAcesso(){
+  if(!APP_CONFIG.persistAccess) return;
+  try {
+    localStorage.setItem(SESSION_KEY_ADMIN, isAdminLoggedIn ? '1' : '0');
+    localStorage.setItem(SESSION_KEY_DEV, isDevLoggedIn ? '1' : '0');
+  } catch (error) {}
+}
+
+function restaurarSessaoAcesso(){
+  if(!APP_CONFIG.persistAccess) return;
+  try {
+    isAdminLoggedIn = localStorage.getItem(SESSION_KEY_ADMIN) === '1';
+    isDevLoggedIn = localStorage.getItem(SESSION_KEY_DEV) === '1';
+  } catch (error) {
+    isAdminLoggedIn = false;
+    isDevLoggedIn = false;
+  }
+}
+
+function limparSessaoAcesso(tipo){
+  try {
+    if(tipo === 'admin') localStorage.removeItem(SESSION_KEY_ADMIN);
+    if(tipo === 'dev') localStorage.removeItem(SESSION_KEY_DEV);
+  } catch (error) {}
+}
+
+function logarAdmin(){
+  const senha = document.getElementById('adminSenha').value || '';
+  if(senha !== ADMIN_PASSWORD){
+    isAdminLoggedIn = false;
+    limparSessaoAcesso('admin');
+    atualizarEstadoAcesso();
+    return mostrarMensagem('msgAdmin', 'Senha do admin incorreta.', true);
+  }
+  isAdminLoggedIn = true;
+  salvarSessaoAcesso();
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgAdmin', 'Login do admin realizado com sucesso.');
+}
+
+function deslogarAdmin(){
+  isAdminLoggedIn = false;
+  limparSessaoAcesso('admin');
+  const campo = document.getElementById('adminSenha');
+  if(campo) campo.value = '';
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgAdmin', 'Admin deslogado com sucesso.');
+}
+
+function toggleAdminAcesso(){
+  if(isAdminLoggedIn) return deslogarAdmin();
+  return logarAdmin();
+}
+
+function logarDev(){
+  const senha = document.getElementById('devSenha').value || '';
+  if(senha !== DEVELOPER_PASSWORD){
+    isDevLoggedIn = false;
+    limparSessaoAcesso('dev');
+    atualizarEstadoAcesso();
+    return mostrarMensagem('msgDev', 'Senha do desenvolvedor incorreta.', true);
+  }
+  isDevLoggedIn = true;
+  salvarSessaoAcesso();
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgDev', 'Login do desenvolvedor realizado com sucesso.');
+}
+
+function deslogarDev(){
+  isDevLoggedIn = false;
+  limparSessaoAcesso('dev');
+  const campo = document.getElementById('devSenha');
+  if(campo) campo.value = '';
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgDev', 'Desenvolvedor deslogado com sucesso.');
+}
+
+function toggleDevAcesso(){
+  if(isDevLoggedIn) return deslogarDev();
+  return logarDev();
+}
+
+function validarDesenvolvedor(){
+  return isDevLoggedIn || document.getElementById('devSenha').value === DEVELOPER_PASSWORD;
+}
+
+function clienteExpirado(cliente){
+  if(!cliente || !cliente.validade || cliente.plano === 'Vitalício') return false;
+  const limite = new Date(`${cliente.validade}T23:59:59`);
+  return limite < new Date();
+}
+
+function bloqueioClienteTexto(){
+  if(!clienteContexto) return '';
+  if((clienteContexto.status || '') === 'Bloqueado') return 'Sistema temporariamente bloqueado para este cliente.';
+  if(clienteExpirado(clienteContexto)) return 'Validade do plano expirada para este cliente.';
+  return '';
+}
+
+function validarOperacaoCliente(msgId){
+  const motivo = bloqueioClienteTexto();
+  if(motivo){
+    if(msgId) mostrarMensagem(msgId, motivo, true);
+    return false;
+  }
+  return true;
+}
+
+function gerarLinkCliente(slug){
+  const url = new URL(window.location.href);
+  url.searchParams.delete('evento');
+  url.searchParams.delete('sala');
+  url.searchParams.delete('pedido');
+  url.searchParams.delete('vestuario');
+  url.searchParams.delete('cliente');
+  url.searchParams.delete('user');
+  if(slug) url.searchParams.set('acesso', slug); else url.searchParams.delete('acesso');
+  return url.toString();
+}
+
+function aplicarModoPublicoVisual(){
+  const isPublic = !!modoPublico;
+  document.body.classList.toggle('public-clean', isPublic);
+
+  const tabAdmin = document.getElementById('tabAdminBtn');
+  const tabDev = document.getElementById('tabDevBtn');
+  const tabInscricao = document.getElementById('tabInscricaoBtn');
+  const tabVestuario = document.getElementById('tabVestuarioBtn');
+  const brandTitle = document.getElementById('brandTitle');
+  const brandSubtitle = document.getElementById('brandSubtitle');
+
+  if(tabAdmin) tabAdmin.classList.toggle('hidden', isPublic);
+  if(tabDev) tabDev.classList.toggle('hidden', isPublic || !!clienteSlugAtual);
+
+  if(isPublic && tabInscricao) tabInscricao.classList.toggle('hidden', true);
+  if(isPublic && tabVestuario) tabVestuario.classList.toggle('hidden', true);
+
+  if(isPublic && modoPublico === 'inscricao') {
+    if(brandTitle && (!brandTitle.textContent || brandTitle.textContent.trim() === DEFAULT_BRAND.title)) brandTitle.textContent = 'PedalApp';
+    if(brandSubtitle) brandSubtitle.textContent = 'Confirme sua inscrição no pedal.';
+  }
+
+  if(isPublic && modoPublico === 'vestuario') {
+    if(brandTitle && (!brandTitle.textContent || brandTitle.textContent.trim() === DEFAULT_BRAND.title)) brandTitle.textContent = 'PedalApp';
+    if(brandSubtitle) brandSubtitle.textContent = 'Escolha seu produto e informe tamanho e quantidade.';
+  }
+  atualizarBannerEscopo();
+}
+
+function atualizarControlesPorPlano(cliente){
+  const modCiclismo = !cliente || cliente.modCiclismo !== false;
+  const modVestuario = !cliente || cliente.modVestuario !== false;
+  const modExportacao = !cliente || cliente.modExportacao !== false;
+  document.getElementById('tabInscricaoBtn').classList.toggle('hidden', !modCiclismo);
+  document.getElementById('tabVestuarioBtn').classList.toggle('hidden', !modVestuario);
+  document.getElementById('subPedalBtn').classList.toggle('hidden', !modCiclismo);
+  document.getElementById('subRoupasBtn').classList.toggle('hidden', !modVestuario);
+  const exp1 = document.getElementById('exportInscritosBtn');
+  const exp2 = document.getElementById('exportVestuarioBtn');
+  if(exp1) exp1.classList.toggle('hidden', !modExportacao);
+  if(exp2) exp2.classList.toggle('hidden', !modExportacao || !modVestuario);
+  if(!modVestuario && !document.getElementById('subRoupas').classList.contains('hidden')) abrirSubAbaAdmin('pedal');
+  if(!modCiclismo && !document.getElementById('abaInscricao').classList.contains('hidden')) abrirAba('admin');
+  if(!modVestuario && !document.getElementById('abaVestuario').classList.contains('hidden')) abrirAba('admin');
+}
+
+function aplicarClienteContexto(cliente){
+  clienteContexto = cliente || null;
+  const brandTitle = document.getElementById('brandTitle');
+  const brandSubtitle = document.getElementById('brandSubtitle');
+  const root = document.documentElement;
+  brandTitle.textContent = cliente?.sistemaNome?.trim() || cliente?.nome?.trim() || DEFAULT_BRAND.title;
+  const statusTxt = cliente ? `${cliente.plano || 'Plano'}${cliente.validade ? ' • até ' + formatarData(cliente.validade) : ''}` : DEFAULT_BRAND.subtitle;
+  brandSubtitle.textContent = statusTxt;
+  const cor = cliente?.modPersonalizacao !== false && cliente?.cor ? cliente.cor : DEFAULT_BRAND.accent;
+  root.style.setProperty('--accent', cor || DEFAULT_BRAND.accent);
+  const devBtn = document.getElementById('tabDevBtn');
+  if(devBtn) devBtn.classList.toggle('hidden', !!clienteSlugAtual);
+  atualizarControlesPorPlano(cliente);
+  atualizarBannerEscopo();
+}
+
+async function aplicarClientePorSlug(){
+  if(!clienteSlugAtual){
+    aplicarClienteContexto(null);
+    return;
+  }
+  const snap = await db.collection('developer_clients').where('slug', '==', clienteSlugAtual).limit(1).get();
+  if(snap.empty){
+    aplicarClienteContexto(null);
+    return;
+  }
+  const doc = snap.docs[0];
+  aplicarClienteContexto({ id:doc.id, ...doc.data() });
+}
+
+    function slugify(texto){
+      return (texto || '')
+        .toString()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-{2,}/g, '-');
+    }
+
+    let globalToastTimer = null;
+
+    function mostrarToastGlobal(texto, erro=false){
+      const el = document.getElementById('globalToast');
+      if(!el || !texto) return;
+      el.textContent = texto;
+      el.classList.remove('hidden','error','show');
+      if(erro) el.classList.add('error');
+      clearTimeout(globalToastTimer);
+      requestAnimationFrame(() => el.classList.add('show'));
+      globalToastTimer = setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.classList.add('hidden'), 240);
+      }, erro ? 6200 : 4400);
+    }
+
+    function abrirVisaoGeral(){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('acesso');
+      url.searchParams.delete('user');
+      url.searchParams.delete('cliente');
+      window.location.href = url.toString();
+    }
+
+    function atualizarBannerEscopo(){
+      const el = document.getElementById('accessScopeBanner');
+      if(!el) return;
+      el.classList.add('hidden');
+      el.innerHTML = '';
+    }
+
+    function mostrarMensagem(id, texto, erro=false){
+      const el = document.getElementById(id);
+      if(el){
+        if(!texto) el.innerHTML = '';
+        else el.innerHTML = `<div class="notice ${erro ? 'error' : ''}">${texto}</div>`;
+      }
+      if(texto) mostrarToastGlobal(texto, erro);
+    }
+
+    function traduzirErroAuth(error){
+      const code = error?.code || '';
+      if(code === 'auth/invalid-login-credentials' || code === 'auth/wrong-password' || code === 'auth/user-not-found') return 'E-mail ou senha incorretos. Confira os dados e tente novamente.';
+      if(code === 'auth/too-many-requests') return 'Muitas tentativas seguidas. Aguarde um pouco e tente novamente.';
+      if(code === 'auth/invalid-email') return 'O e-mail informado é inválido.';
+      return error?.message || 'Falha ao autenticar. Tente novamente.';
+    }
+
+    function validarAdmin(){
+      return isAdminLoggedIn || document.getElementById('adminSenha').value === ADMIN_PASSWORD;
+    }
+
+    function obterNomeProdutoAdmin(){
+      const base = (document.getElementById('vestuarioProdutoBase')?.value || '').trim();
+      const digitado = (document.getElementById('vestuarioEventoNome')?.value || '').trim();
+      return digitado || (base && base !== 'Outro' ? base : '');
+    }
+
+    function atualizarPreviewNomeProduto(){
+      const preview = document.getElementById('vestuarioNomePreview');
+      if(preview) preview.value = obterNomeProdutoAdmin();
+    }
+
+    function normalizarNomeArquivo(nome){
+      return String(nome || 'arquivo').replace(/[^a-zA-Z0-9._-]+/g, '-');
+    }
+
+    function abrirAnexosProduto(){
+      const input = document.getElementById('vestuarioArquivosInput');
+      if(input) input.click();
+    }
+
+    function arquivoDataURLParaBytes(dataUrl){
+      const base64 = String(dataUrl || '').split(',')[1] || '';
+      return Math.ceil((base64.length * 3) / 4);
+    }
+
+    function renderizarListaArquivosProduto(){
+      const box = document.getElementById('listaArquivosProduto');
+      if(!box) return;
+      if(!produtoArquivosPendentes.length){
+        box.innerHTML = '<div class="empty">Nenhum arquivo anexado.</div>';
+        return;
+      }
+      box.innerHTML = produtoArquivosPendentes.map((arquivo, idx) => `
+        <div class="attachment-item">
+          <div class="attachment-meta">
+            <img src="${arquivo.dataUrl}" alt="${escapeAttribute(arquivo.nome || 'Arquivo')}" />
+            <div>
+              <div class="attachment-name">${escapeHtml(arquivo.nome || `arquivo-${idx+1}.jpg`)}</div>
+              <div class="small muted">${Math.max(1, Math.round((arquivo.bytes || 0) / 1024))} KB</div>
+            </div>
+          </div>
+          <div class="inline-actions">
+            <a class="btn ghost mini" href="${arquivo.dataUrl}" download="${escapeAttribute(arquivo.nome || `arquivo-${idx+1}.jpg`)}">Baixar</a>
+            <button class="btn danger mini" type="button" onclick="removerArquivoProduto(${idx})">Remover</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function removerArquivoProduto(index){
+      produtoArquivosPendentes.splice(index, 1);
+      renderizarListaArquivosProduto();
+    }
+
+    function lerArquivoImagem(file){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const maxW = 1200;
+            const scale = Math.min(1, maxW / img.width);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            let quality = 0.82;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            while(arquivoDataURLParaBytes(dataUrl) > 120000 && quality > 0.35){
+              quality -= 0.07;
+              dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+            resolve({
+              nome: normalizarNomeArquivo((file.name || 'arquivo').replace(/\.[^.]+$/, '') + '.jpg'),
+              tipo: 'image/jpeg',
+              dataUrl,
+              bytes: arquivoDataURLParaBytes(dataUrl)
+            });
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function selecionarArquivosProduto(event){
+      const arquivos = Array.from(event.target.files || []);
+      if(!arquivos.length) return;
+      const limite = 5;
+      const disponiveis = limite - produtoArquivosPendentes.length;
+      if(disponiveis <= 0){
+        mostrarMensagem('msgVestuarioAdmin', 'Limite atingido: até 5 arquivos por produto.', true);
+        event.target.value = '';
+        return;
+      }
+      let anexados = 0;
+      for(const file of arquivos.slice(0, disponiveis)){
+        if(!(file.type || '').startsWith('image/')){
+          mostrarMensagem('msgVestuarioAdmin', 'Anexe apenas imagens para a grade de tamanhos.', true);
+          continue;
+        }
+        try{
+          const convertido = await lerArquivoImagem(file);
+          produtoArquivosPendentes.push(convertido);
+          anexados += 1;
+        }catch(err){
+          mostrarMensagem('msgVestuarioAdmin', 'Não foi possível processar uma das imagens.', true);
+        }
+      }
+      if(arquivos.length > disponiveis){
+        mostrarMensagem('msgVestuarioAdmin', `Foram anexados ${anexados} arquivo(s). Limite: até 5 por produto.`, false);
+      }else if(anexados){
+        mostrarMensagem('msgVestuarioAdmin', `${anexados} arquivo(s) anexado(s) com sucesso.`);
+      }
+      renderizarListaArquivosProduto();
+      event.target.value = '';
+    }
+
+    function gerarHtmlAnexos(anexos){
+      if(!Array.isArray(anexos) || !anexos.length) return '';
+      return `<div class="thumb-grid">${anexos.map((arquivo, idx) => `
+        <div class="thumb-card">
+          <img src="${arquivo.dataUrl}" alt="${escapeAttribute(arquivo.nome || `arquivo-${idx+1}.jpg`)}" />
+          <a href="${arquivo.dataUrl}" download="${escapeAttribute(arquivo.nome || `arquivo-${idx+1}.jpg`)}">${escapeHtml(arquivo.nome || `arquivo-${idx+1}.jpg`)}</a>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function formatarData(dataISO){
+      if(!dataISO) return '-';
+      const [ano, mes, dia] = dataISO.split('-');
+      if(!ano || !mes || !dia) return dataISO;
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function escapeHtml(texto){
+      return String(texto ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function escapeAttribute(texto){
+      return String(texto ?? '').replace(/"/g, '&quot;');
+    }
+
+    async function compartilharOuBaixarCSV(linhas, nomeArquivo, titulo, texto, msgId){
+      const csv = '\uFEFF' + linhas.map(l => l.map(v => `"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+
+      if(window.File && navigator.canShare){
+        try{
+          const file = new File([blob], nomeArquivo, { type:'text/csv;charset=utf-8;' });
+          if(navigator.canShare({ files:[file] })){
+            await navigator.share({ files:[file], title:titulo, text:texto });
+            mostrarMensagem(msgId, 'Arquivo exportado e pronto para envio.');
+            return;
+          }
+        }catch(err){
+          if(err && err.name === 'AbortError'){
+            mostrarMensagem(msgId, 'Envio cancelado. O arquivo será baixado para você.', true);
+          }
+        }
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+      mostrarMensagem(msgId, 'Arquivo exportado com sucesso.');
+    }
+
+    function gerarLinkPedal(codigo){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('pedido');
+  url.searchParams.delete('vestuario');
+      url.searchParams.set('evento', codigo);
+      return url.toString();
+    }
+
+    function gerarLinkVestuario(codigo){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('evento');
+      url.searchParams.delete('sala');
+      url.searchParams.set('pedido', codigo);
+      return url.toString();
+    }
+
+    function limparPainelAdminInscritos(){
+      if(unsubscribeInscritosAdmin) unsubscribeInscritosAdmin();
+      unsubscribeInscritosAdmin = null;
+      cacheInscritosAdmin = [];
+      document.getElementById('listaInscritosAdmin').innerHTML = '';
+      document.getElementById('contadorInscritosAdmin').textContent = '0';
+      document.getElementById('adminInscritosTitulo').textContent = 'Selecione ou salve um pedal para gerenciar os inscritos.';
+      document.getElementById('emptyInscritosAdmin').classList.remove('hidden');
+      cancelarEdicaoInscritoAdmin(true);
+      mostrarMensagem('msgInscritosAdmin', '');
+    }
+
+    function limparPainelAdminVestuario(){
+      if(unsubscribeVestuarioEscolhasAdmin) unsubscribeVestuarioEscolhasAdmin();
+      unsubscribeVestuarioEscolhasAdmin = null;
+      cacheVestuarioEscolhasAdmin = [];
+      document.getElementById('listaVestuarioEscolhasAdmin').innerHTML = '';
+      document.getElementById('contadorVestuarioEscolhasAdmin').textContent = '0';
+      document.getElementById('adminVestuarioTitulo').textContent = 'Selecione ou salve um produto para gerenciar os pedidos.';
+      document.getElementById('emptyVestuarioAdmin').classList.remove('hidden');
+      cancelarEdicaoVestuarioEscolha(true);
+      mostrarMensagem('msgVestuarioEscolhasAdmin', '');
+    }
+
+    function limparFormularioPedal(){
+      pedalAtualCodigo = '';
+      document.getElementById('pedalExistente').value = '';
+      document.getElementById('nomePedal').value = '';
+      document.getElementById('dataPedal').value = '';
+      document.getElementById('horarioPedal').value = '';
+      document.getElementById('encontroPedal').value = '';
+      document.getElementById('cidadePedal').value = '';
+      document.getElementById('trajetoPedal').value = '';
+      document.getElementById('nivelPedal').value = 'Leve';
+      document.getElementById('descricaoPedal').value = '';
+      document.getElementById('linkPedal').textContent = 'Salve um pedal para gerar o link.';
+      mostrarMensagem('msgAdmin', '');
+      limparPainelAdminInscritos();
+    }
+
+    async function salvarPedal(){
+      if(!validarAdmin()) return mostrarMensagem('msgAdmin', 'Senha do admin incorreta.', true);
+      if(!validarOperacaoCliente('msgAdmin')) return;
+      const nome = document.getElementById('nomePedal').value.trim();
+      const data = document.getElementById('dataPedal').value;
+      const horario = document.getElementById('horarioPedal').value;
+      const encontro = document.getElementById('encontroPedal').value.trim();
+      const cidade = document.getElementById('cidadePedal').value.trim();
+      const trajeto = document.getElementById('trajetoPedal').value.trim();
+      const nivel = document.getElementById('nivelPedal').value;
+      const descricao = document.getElementById('descricaoPedal').value.trim();
+
+      if(!nome || !data || !horario || !encontro){
+        return mostrarMensagem('msgAdmin', 'Preencha nome do pedal, data, horário e ponto de encontro.', true);
+      }
+
+      const codigo = pedalAtualCodigo || slugify(`${data}-${nome}`);
+      const ref = db.collection('events').doc(codigo);
+      const snap = await ref.get();
+      const payload = { nome, data, horario, encontro, cidade, trajeto, nivel, descricao, codigo, statusManual:(snap.exists ? ((snap.data() || {}).statusManual || 'normal') : 'normal'), clienteSlug: clienteContexto?.slug || '', clienteId: clienteContexto?.id || '', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if(!snap.exists) payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await ref.set(payload, { merge:true });
+      pedalAtualCodigo = codigo;
+      document.getElementById('pedalExistente').value = codigo;
+      document.getElementById('linkPedal').textContent = gerarLinkPedal(codigo);
+      await carregarPedais();
+      carregarInscritosAdmin(codigo);
+      mostrarMensagem('msgAdmin', 'Pedal salvo com sucesso.');
+    }
+
+    async function excluirPedalAtual(){
+      if(!validarAdmin()) return mostrarMensagem('msgAdmin', 'Senha do admin incorreta.', true);
+      const pedalId = getPedalAdminSelecionado();
+      if(!pedalId) return mostrarMensagem('msgAdmin', 'Selecione um pedal para excluir.', true);
+      const pedal = cachePedais.find(p => p.id === pedalId);
+      if(!confirm(`Excluir o pedal ${pedal?.nome || pedalId} e todos os seus inscritos?`)) return;
+
+      const inscritos = await db.collection('events').doc(pedalId).collection('inscritos').get();
+      for(const doc of inscritos.docs) await doc.ref.delete();
+      await db.collection('events').doc(pedalId).delete();
+
+      if(pedalAtualInscricao === pedalId){
+        pedalAtualInscricao = '';
+        const url = new URL(window.location.href); url.searchParams.delete('evento'); url.searchParams.delete('sala'); history.replaceState({}, '', url.toString());
+      }
+      limparFormularioPedal();
+      await carregarPedais();
+      mostrarMensagem('msgAdmin', 'Pedal excluído com sucesso.');
+    }
+
+    async function exportarInscritosCSV(){
+      const pedalId = getPedalAdminSelecionado();
+      if(!pedalId) return mostrarMensagem('msgAdmin', 'Selecione um pedal para exportar os inscritos.', true);
+      const pedal = cachePedais.find(p => p.id === pedalId);
+      const linhas = [
+        ['Pedal','Data','Horário','Nome','Nível','Categoria','WhatsApp','Cidade'],
+        ...cacheInscritosAdmin.map(item => [pedal?.nome || pedalId, pedal?.data || '', pedal?.horario || '', item.nome || '', item.nivel || '', item.categoria || '', item.whats || '', item.cidade || ''])
+      ];
+      if(linhas.length === 1) return mostrarMensagem('msgAdmin', 'Não há inscritos para exportar.', true);
+      const nomeArquivo = `inscritos_${slugify(pedal?.nome || pedalId)}_${new Date().toISOString().slice(0,10)}.csv`;
+      await compartilharOuBaixarCSV(linhas, nomeArquivo, 'Lista de inscritos', 'Segue a lista de inscritos.', 'msgAdmin');
+    }
+
+    function copiarLinkAtual(){
+      const texto = document.getElementById('linkPedal').textContent;
+      if(!texto || texto.includes('Salve um pedal')) return;
+      navigator.clipboard.writeText(texto);
+      mostrarMensagem('msgAdmin', 'Link copiado.');
+    }
+
+    function enviarWhatsLink(){
+      const texto = document.getElementById('linkPedal').textContent;
+      if(!texto || texto.includes('Salve um pedal')) return;
+      const nome = document.getElementById('nomePedal').value.trim() || 'Pedal';
+      window.open(`https://wa.me/?text=${encodeURIComponent(`Inscrição aberta para ${nome}.\n${texto}`)}`, '_blank');
+    }
+
+    async function carregarPedais(){
+      const docsPedais = await consultarComEscopoLegado('events', clienteContexto?.slug || '');
+      const snap = { docs: docsPedais };
+      cachePedais = snap.docs.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.data || '').localeCompare(b.data || '') || (a.nome || '').localeCompare(b.nome || ''));
+
+      const selectEdit = document.getElementById('pedalExistente');
+      const selectInsc = document.getElementById('inscricaoPedalSelect');
+      const bodyPedais = document.getElementById('listaPedais');
+      selectEdit.innerHTML = '<option value="">Novo pedal</option>';
+      selectInsc.innerHTML = '<option value="">Selecione</option>';
+      bodyPedais.innerHTML = '';
+
+      cachePedais.forEach(pedal => {
+        const optionText = `${pedal.nome || pedal.id} - ${formatarData(pedal.data)}`;
+        selectEdit.innerHTML += `<option value="${escapeAttribute(pedal.id)}">${escapeHtml(optionText)}</option>`;
+        selectInsc.innerHTML += `<option value="${escapeAttribute(pedal.id)}">${escapeHtml(optionText)}</option>`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(pedal.nome || pedal.id)}</td><td>${formatarData(pedal.data)}</td><td>${escapeHtml(pedal.horario || '')}</td><td>${textoStatusPedal(pedal)}</td><td class="actions-cell"><div class="inline-actions"><button class="btn secondary mini js-pedal-toggle" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">${isPedalEncerrado(pedal) ? 'Abrir' : 'Fechar'}</button><button class="btn ghost mini js-pedal-editar" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">Editar</button><button class="btn danger mini js-pedal-excluir" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">Excluir</button></div></td>`;
+        bodyPedais.appendChild(tr);
+      });
+
+      document.getElementById('contadorPedais').textContent = String(cachePedais.length);
+      if(pedalAtualCodigo && cachePedais.some(p => p.id === pedalAtualCodigo)){
+        document.getElementById('pedalExistente').value = pedalAtualCodigo;
+      }
+      if(pedalAtualInscricao && cachePedais.some(p => p.id === pedalAtualInscricao)){
+        document.getElementById('inscricaoPedalSelect').value = pedalAtualInscricao;
+        carregarInscricaoPorPedal(pedalAtualInscricao);
+      }
+    }
+
+    function editarPedalPorId(id){
+      document.getElementById('pedalExistente').value = id;
+      carregarPedalParaEdicao();
+      abrirAba('admin');
+      abrirSubAbaAdmin('pedal');
+    }
+
+    function excluirPedalPorId(id){
+      pedalAtualCodigo = id;
+      document.getElementById('pedalExistente').value = id;
+      excluirPedalAtual();
+      abrirAba('admin');
+      abrirSubAbaAdmin('pedal');
+    }
+
+    async function carregarPedalParaEdicao(){
+      const id = document.getElementById('pedalExistente').value;
+      if(!id) return limparFormularioPedal();
+      const doc = await db.collection('events').doc(id).get();
+      if(!doc.exists) return;
+      const p = doc.data();
+      pedalAtualCodigo = id;
+      document.getElementById('nomePedal').value = p.nome || '';
+      document.getElementById('dataPedal').value = p.data || '';
+      document.getElementById('horarioPedal').value = p.horario || '';
+      document.getElementById('encontroPedal').value = p.encontro || '';
+      document.getElementById('cidadePedal').value = p.cidade || '';
+      document.getElementById('trajetoPedal').value = p.trajeto || '';
+      document.getElementById('nivelPedal').value = p.nivel || 'Leve';
+      document.getElementById('descricaoPedal').value = p.descricao || '';
+      document.getElementById('linkPedal').textContent = gerarLinkPedal(id);
+      carregarInscritosAdmin(id);
+      mostrarMensagem('msgAdmin', 'Pedal carregado para edição.');
+    }
+
+    function trocarPedalInscricao(){
+      const id = document.getElementById('inscricaoPedalSelect').value;
+      pedalAtualInscricao = id;
+      const url = new URL(window.location.href);
+      if(id) url.searchParams.set('evento', id); else url.searchParams.delete('evento');
+      url.searchParams.delete('pedido');
+  url.searchParams.delete('vestuario');
+      history.replaceState({}, '', url.toString());
+      carregarInscricaoPorPedal(id);
+    }
+
+    async function carregarInscricaoPorPedal(id){
+      if(unsubscribeInscritos) unsubscribeInscritos();
+      if(unsubscribeInfoPedal) unsubscribeInfoPedal();
+      document.getElementById('listaInscritos').innerHTML = '';
+      document.getElementById('contadorInscritos').textContent = '0';
+      const info = document.getElementById('infoPedal');
+
+      if(!id){
+        info.className = 'empty';
+        info.textContent = 'Escolha um pedal para visualizar as informações.';
+        return;
+      }
+
+      unsubscribeInfoPedal = db.collection('events').doc(id).onSnapshot(doc => {
+        const p = doc.data();
+        if(!p){ info.className = 'empty'; info.textContent = 'Pedal não encontrado.'; return; }
+        info.className = 'event-box';
+        info.innerHTML = `<h3>${escapeHtml(p.nome || '')}</h3>
+          <div class="muted"><b>Data:</b> ${formatarData(p.data)} &nbsp; <b>Horário:</b> ${escapeHtml(p.horario || '')}</div>
+          <div style="margin-top:10px"><b>Ponto de encontro:</b> ${escapeHtml(p.encontro || '-')}</div>
+          <div style="margin-top:8px"><b>Cidade:</b> ${escapeHtml(p.cidade || '-')}</div>
+          <div style="margin-top:8px"><b>Nível:</b> ${escapeHtml(p.nivel || '-')}</div>
+          ${p.trajeto ? `<div style="margin-top:8px"><b>Trajeto:</b> <a class="link-accent" href="${escapeAttribute(p.trajeto)}" target="_blank">Abrir link</a></div>` : ''}
+          ${p.descricao ? `<div style="margin-top:12px">${escapeHtml(p.descricao).replace(/\n/g,'<br>')}</div>` : ''}`;
+      });
+
+      unsubscribeInscritos = db.collection('events').doc(id).collection('inscritos').onSnapshot(snap => {
+        const registros = snap.docs.map(doc => doc.data()).sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
+        const lista = document.getElementById('listaInscritos');
+        lista.innerHTML = '';
+        registros.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHtml(item.nome || '')}</td><td>${escapeHtml(item.nivel || '')}</td><td>${escapeHtml(item.categoria || '')}</td><td>${escapeHtml(item.cidade || '')}</td>`;
+          lista.appendChild(tr);
+        });
+        document.getElementById('contadorInscritos').textContent = String(registros.length);
+      });
+    }
+
+    function carregarInscritosAdmin(pedalId){
+      if(unsubscribeInscritosAdmin) unsubscribeInscritosAdmin();
+      const tbody = document.getElementById('listaInscritosAdmin');
+      tbody.innerHTML = '';
+      cacheInscritosAdmin = [];
+      document.getElementById('contadorInscritosAdmin').textContent = '0';
+      cancelarEdicaoInscritoAdmin(true);
+
+      if(!pedalId) return limparPainelAdminInscritos();
+      const pedal = cachePedais.find(p => p.id === pedalId);
+      document.getElementById('adminInscritosTitulo').textContent = pedal ? `Gerencie os inscritos de ${pedal.nome || pedal.id}.` : 'Gerencie os inscritos do pedal selecionado.';
+
+      unsubscribeInscritosAdmin = db.collection('events').doc(pedalId).collection('inscritos').onSnapshot(snap => {
+        cacheInscritosAdmin = snap.docs.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
+        tbody.innerHTML = '';
+        document.getElementById('contadorInscritosAdmin').textContent = String(cacheInscritosAdmin.length);
+        document.getElementById('emptyInscritosAdmin').classList.toggle('hidden', cacheInscritosAdmin.length > 0);
+        cacheInscritosAdmin.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHtml(item.nome || '')}</td><td>${escapeHtml(item.nivel || '')}</td><td>${escapeHtml(item.categoria || '')}</td><td>${escapeHtml(item.cidade || '')}</td>
+          <td class="actions-cell"><div class="inline-actions"><button class="btn ghost mini js-inscrito-editar" type="button" data-inscrito-id="${escapeAttribute(item.id)}">Editar</button><button class="btn danger mini js-inscrito-excluir" type="button" data-inscrito-id="${escapeAttribute(item.id)}">Excluir</button></div></td>`;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    function editarInscritoAdmin(id){
+      const item = cacheInscritosAdmin.find(x => x.id === id);
+      if(!item) return;
+      inscritoEditId = id;
+      document.getElementById('boxEditarInscrito').classList.remove('hidden');
+      document.getElementById('adminInscritoNome').value = item.nome || '';
+      document.getElementById('adminInscritoNivel').value = item.nivel || 'Iniciante';
+      document.getElementById('adminInscritoCategoria').value = item.categoria || 'Cicloturismo';
+      document.getElementById('adminInscritoWhats').value = item.whats || '';
+      document.getElementById('adminInscritoCidade').value = item.cidade || '';
+      mostrarMensagem('msgInscritosAdmin', '');
+    }
+
+    async function salvarEdicaoInscritoAdmin(){
+      if(!validarAdmin()) return mostrarMensagem('msgInscritosAdmin', 'Senha do admin incorreta.', true);
+      const pedalId = getPedalAdminSelecionado();
+      if(!pedalId || !inscritoEditId) return mostrarMensagem('msgInscritosAdmin', 'Selecione um inscrito para editar.', true);
+
+      const nome = document.getElementById('adminInscritoNome').value.trim();
+      const nivel = document.getElementById('adminInscritoNivel').value;
+      const categoria = document.getElementById('adminInscritoCategoria').value;
+      const whats = document.getElementById('adminInscritoWhats').value.trim();
+      const cidade = document.getElementById('adminInscritoCidade').value.trim();
+      if(!nome) return mostrarMensagem('msgInscritosAdmin', 'Informe o nome do ciclista.', true);
+
+      const antigo = cacheInscritosAdmin.find(x => x.id === inscritoEditId) || {};
+      const novoId = slugify(nome);
+      const collection = db.collection('events').doc(pedalId).collection('inscritos');
+      const payload = { nome, nomeKey:novoId, nivel, whats, cidade, categoria, createdAt: antigo.createdAt || firebase.firestore.FieldValue.serverTimestamp() };
+
+      if(novoId !== inscritoEditId){
+        const conflito = await collection.doc(novoId).get();
+        if(conflito.exists) return mostrarMensagem('msgInscritosAdmin', 'Já existe um inscrito com este nome neste pedal.', true);
+        await collection.doc(novoId).set(payload, { merge:true });
+        await collection.doc(inscritoEditId).delete();
+      }else{
+        await collection.doc(inscritoEditId).set(payload, { merge:true });
+      }
+      cancelarEdicaoInscritoAdmin();
+      mostrarMensagem('msgInscritosAdmin', 'Inscrito atualizado com sucesso.');
+    }
+
+    async function excluirInscritoAdmin(id){
+      if(!validarAdmin()) return mostrarMensagem('msgInscritosAdmin', 'Senha do admin incorreta.', true);
+      const pedalId = getPedalAdminSelecionado();
+      if(!pedalId) return;
+      const item = cacheInscritosAdmin.find(x => x.id === id);
+      if(!item) return;
+      if(!confirm(`Excluir a inscrição de ${item.nome || 'este ciclista'}?`)) return;
+      await db.collection('events').doc(pedalId).collection('inscritos').doc(id).delete();
+      if(inscritoEditId === id) cancelarEdicaoInscritoAdmin();
+      mostrarMensagem('msgInscritosAdmin', 'Inscrito excluído com sucesso.');
+    }
+
+    function cancelarEdicaoInscritoAdmin(silencioso=false){
+      inscritoEditId = '';
+      document.getElementById('boxEditarInscrito').classList.add('hidden');
+      document.getElementById('adminInscritoNome').value = '';
+      document.getElementById('adminInscritoNivel').value = 'Iniciante';
+      document.getElementById('adminInscritoCategoria').value = 'Cicloturismo';
+      document.getElementById('adminInscritoWhats').value = '';
+      document.getElementById('adminInscritoCidade').value = '';
+      if(!silencioso) mostrarMensagem('msgInscritosAdmin', '');
+    }
+
+    async function inscreverCiclista(){
+      if(!validarOperacaoCliente('msgInscricao')) return;
+      const pedalId = document.getElementById('inscricaoPedalSelect').value;
+      const nome = document.getElementById('nomeCiclista').value.trim();
+      const nivel = document.getElementById('nivelCiclista').value;
+      const whats = document.getElementById('whatsCiclista').value.trim();
+      const cidade = document.getElementById('cidadeCiclista').value.trim();
+      const categoria = document.getElementById('categoriaCiclista').value;
+
+      if(!pedalId) return mostrarMensagem('msgInscricao', 'Selecione o pedal.', true);
+      if(!nome) return mostrarMensagem('msgInscricao', 'Informe o nome do ciclista.', true);
+
+      const nomeKey = slugify(nome);
+      const ref = db.collection('events').doc(pedalId).collection('inscritos').doc(nomeKey);
+      const doc = await ref.get();
+      if(doc.exists) return mostrarMensagem('msgInscricao', 'Este nome já está inscrito neste pedal.', true);
+
+      await ref.set({ nome, nomeKey, nivel, whats, cidade, categoria, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      document.getElementById('nomeCiclista').value = '';
+      document.getElementById('nivelCiclista').value = 'Iniciante';
+      document.getElementById('whatsCiclista').value = '';
+      document.getElementById('cidadeCiclista').value = '';
+      document.getElementById('categoriaCiclista').value = 'Cicloturismo';
+      mostrarMensagem('msgInscricao', 'Inscrição confirmada com sucesso.');
+    }
+
+    
+    function limparFormularioVestuarioEvento(){
+      vestuarioAtualCodigo = '';
+      document.getElementById('vestuarioEventoExistente').value = '';
+      document.getElementById('vestuarioProdutoBase').value = '';
+      document.getElementById('vestuarioEventoNome').value = '';
+      document.getElementById('vestuarioNomePreview').value = '';
+      document.getElementById('vestuarioEventoData').value = '';
+      document.getElementById('vestuarioEventoObs').value = '';
+      document.getElementById('vestuarioEventoDescricao').value = '';
+      produtoArquivosPendentes = [];
+      renderizarListaArquivosProduto();
+      document.getElementById('linkVestuario').textContent = 'Salve um produto para gerar o link.';
+      mostrarMensagem('msgVestuarioAdmin', '');
+      limparPainelAdminVestuario();
+    }
+
+    async function salvarVestuarioEvento(){
+      if(!validarAdmin()) return mostrarMensagem('msgVestuarioAdmin', 'Senha do admin incorreta.', true);
+      if(!validarOperacaoCliente('msgVestuarioAdmin')) return;
+      const produtoBase = document.getElementById('vestuarioProdutoBase').value.trim();
+      const nome = obterNomeProdutoAdmin();
+      const dataLimite = document.getElementById('vestuarioEventoData').value;
+      const observacao = document.getElementById('vestuarioEventoObs').value.trim();
+      const descricao = document.getElementById('vestuarioEventoDescricao').value.trim();
+      if(!nome) return mostrarMensagem('msgVestuarioAdmin', 'Selecione um produto da lista ou escreva o nome do produto.', true);
+
+      const codigoSelecionado = document.getElementById('vestuarioEventoExistente').value || '';
+      const codigo = codigoSelecionado || vestuarioAtualCodigo || slugify(`${dataLimite || 'sem-data'}-${nome}`);
+      const ref = db.collection('vestuario_events').doc(codigo);
+      const snap = await ref.get();
+      const payload = { nome, produtoBase, dataLimite, observacao, descricao, anexos: produtoArquivosPendentes, codigo, statusManual:(snap.exists ? ((snap.data() || {}).statusManual || 'normal') : 'normal'), clienteSlug: clienteContexto?.slug || '', clienteId: clienteContexto?.id || '', updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+      if(!snap.exists) payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await ref.set(payload, { merge:true });
+
+      vestuarioAtualCodigo = codigo;
+      document.getElementById('vestuarioEventoExistente').value = codigo;
+      document.getElementById('vestuarioNomePreview').value = nome;
+      document.getElementById('linkVestuario').textContent = gerarLinkVestuario(codigo);
+      await carregarVestuarioEventos();
+      carregarVestuarioEscolhasAdmin(codigo);
+      mostrarMensagem('msgVestuarioAdmin', 'Produto salvo com sucesso.');
+    }
+
+    async function excluirVestuarioEventoAtual(idForcado=''){
+      if(!validarAdmin()) return mostrarMensagem('msgVestuarioAdmin', 'Senha do admin incorreta.', true);
+      const eventoId = idForcado || getVestuarioEventoAdminSelecionado();
+      if(!eventoId) return mostrarMensagem('msgVestuarioAdmin', 'Selecione um produto para excluir.', true);
+      const produto = cacheVestuarioEventos.find(e => e.id === eventoId);
+      if(!confirm(`Excluir o produto ${produto?.nome || eventoId} e todos os pedidos?`)) return;
+
+      const escolhas = await db.collection('vestuario_events').doc(eventoId).collection('escolhas').get();
+      for(const doc of escolhas.docs) await doc.ref.delete();
+      await db.collection('vestuario_events').doc(eventoId).delete();
+
+      if(vestuarioAtualPublico === eventoId){
+        vestuarioAtualPublico = '';
+        const url = new URL(window.location.href); url.searchParams.delete('pedido');
+  url.searchParams.delete('vestuario'); history.replaceState({}, '', url.toString());
+      }
+      vestuarioAtualCodigo = '';
+      document.getElementById('vestuarioEventoExistente').value = '';
+      limparFormularioVestuarioEvento();
+      await carregarVestuarioEventos();
+      mostrarMensagem('msgVestuarioAdmin', 'Produto excluído com sucesso.');
+    }
+
+    async function carregarVestuarioEventos(){
+      const docsProdutos = await consultarComEscopoLegado('vestuario_events', clienteContexto?.slug || '');
+      const snap = { docs: docsProdutos };
+      cacheVestuarioEventos = snap.docs.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.dataLimite || '').localeCompare(b.dataLimite || '') || (a.nome || '').localeCompare(b.nome || ''));
+
+      const selectAdmin = document.getElementById('vestuarioEventoExistente');
+      const selectPublico = document.getElementById('vestuarioEventoSelect');
+      const tabela = document.getElementById('listaVestuarioEventos');
+      selectAdmin.innerHTML = '<option value="">Novo produto</option>';
+      selectPublico.innerHTML = '<option value="">Selecione</option>';
+      tabela.innerHTML = '';
+
+      cacheVestuarioEventos.forEach(produto => {
+        const optionText = `${produto.nome || produto.id}${produto.dataLimite ? ' - ' + formatarData(produto.dataLimite) : ''}`;
+        selectAdmin.innerHTML += `<option value="${escapeAttribute(produto.id)}">${escapeHtml(optionText)}</option>`;
+        selectPublico.innerHTML += `<option value="${escapeAttribute(produto.id)}">${escapeHtml(optionText)}</option>`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><button class="btn ghost mini js-produto-editar" type="button" data-produto-id="${escapeAttribute(produto.id)}">${escapeHtml(produto.nome || produto.id)}</button></td><td>${formatarData(produto.dataLimite)}</td><td>${textoStatusProduto(produto)}</td><td>${escapeHtml(produto.observacao || '')}</td><td class="actions-cell"><div class="inline-actions"><button class="btn secondary mini js-produto-toggle" type="button" data-produto-id="${escapeAttribute(produto.id)}">${isProdutoEncerrado(produto) ? 'Abrir' : 'Fechar'}</button><button class="btn ghost mini js-produto-editar" type="button" data-produto-id="${escapeAttribute(produto.id)}">Editar</button><button class="btn danger mini js-produto-excluir" type="button" data-produto-id="${escapeAttribute(produto.id)}">Excluir</button></div></td>`;
+        tabela.appendChild(tr);
+      });
+
+      document.getElementById('contadorVestuarioEventos').textContent = String(cacheVestuarioEventos.length);
+      preencherSelectProdutoPedido(vestuarioEscolhaEditEventoId || getVestuarioEventoAdminSelecionado());
+      if(vestuarioAtualCodigo && cacheVestuarioEventos.some(e => e.id === vestuarioAtualCodigo)){
+        document.getElementById('vestuarioEventoExistente').value = vestuarioAtualCodigo;
+      }
+      if(vestuarioAtualPublico && cacheVestuarioEventos.some(e => e.id === vestuarioAtualPublico)){
+        document.getElementById('vestuarioEventoSelect').value = vestuarioAtualPublico;
+        carregarVestuarioPublico(vestuarioAtualPublico);
+      }
+    }
+
+    function editarVestuarioEventoPorId(id){
+      vestuarioAtualCodigo = id;
+      document.getElementById('vestuarioEventoExistente').value = id;
+      carregarVestuarioEventoParaEdicao();
+      abrirAba('admin');
+      abrirSubAbaAdmin('roupas');
+    }
+
+    function excluirVestuarioEventoPorId(id){
+      vestuarioAtualCodigo = id;
+      document.getElementById('vestuarioEventoExistente').value = id;
+      excluirVestuarioEventoAtual(id);
+      abrirAba('admin');
+      abrirSubAbaAdmin('roupas');
+    }
+
+    async function carregarVestuarioEventoParaEdicao(){
+      const id = document.getElementById('vestuarioEventoExistente').value;
+      if(!id) return limparFormularioVestuarioEvento();
+      const doc = await db.collection('vestuario_events').doc(id).get();
+      if(!doc.exists) return;
+      const produto = doc.data();
+      vestuarioAtualCodigo = id;
+      document.getElementById('vestuarioEventoExistente').value = id;
+      document.getElementById('vestuarioProdutoBase').value = produto.produtoBase || '';
+      document.getElementById('vestuarioEventoNome').value = produto.nome || '';
+      document.getElementById('vestuarioNomePreview').value = produto.nome || '';
+      document.getElementById('vestuarioEventoData').value = produto.dataLimite || '';
+      document.getElementById('vestuarioEventoObs').value = produto.observacao || '';
+      document.getElementById('vestuarioEventoDescricao').value = produto.descricao || '';
+      produtoArquivosPendentes = Array.isArray(produto.anexos) ? produto.anexos : [];
+      renderizarListaArquivosProduto();
+      document.getElementById('linkVestuario').textContent = gerarLinkVestuario(id);
+      carregarVestuarioEscolhasAdmin(id);
+      mostrarMensagem('msgVestuarioAdmin', 'Produto carregado para edição.');
+    }
+
+    function copiarLinkVestuario(){
+      const texto = document.getElementById('linkVestuario').textContent;
+      if(!texto || texto.includes('Salve um produto')) return;
+      navigator.clipboard.writeText(texto);
+      mostrarMensagem('msgVestuarioAdmin', 'Link copiado.');
+    }
+
+    function enviarWhatsLinkVestuario(){
+      const texto = document.getElementById('linkVestuario').textContent;
+      if(!texto || texto.includes('Salve um produto')) return;
+      const nome = obterNomeProdutoAdmin() || 'Produto';
+      window.open(`https://wa.me/?text=${encodeURIComponent(`Pedido de produtos aberto para ${nome}.\n${texto}`)}`, '_blank');
+    }
+
+    function trocarVestuarioPublico(){
+      const id = document.getElementById('vestuarioEventoSelect').value;
+      vestuarioAtualPublico = id;
+      const url = new URL(window.location.href);
+      if(id){ url.searchParams.set('pedido', id); url.searchParams.delete('vestuario'); } else { url.searchParams.delete('pedido'); url.searchParams.delete('vestuario'); }
+      url.searchParams.delete('sala');
+      history.replaceState({}, '', url.toString());
+      carregarVestuarioPublico(id);
+    }
+
+    async function carregarVestuarioPublico(id){
+      if(unsubscribeVestuarioInfo) unsubscribeVestuarioInfo();
+      if(unsubscribeVestuarioPublico) unsubscribeVestuarioPublico();
+      document.getElementById('listaVestuarioPublico').innerHTML = '';
+      document.getElementById('contadorVestuarioEscolhas').textContent = '0';
+      const info = document.getElementById('infoVestuarioEvento');
+
+      if(!id){
+        info.className = 'empty';
+        info.textContent = 'Escolha um produto para visualizar as informações.';
+        document.getElementById('anexosVestuarioPublico').innerHTML = '';
+        return;
+      }
+
+      unsubscribeVestuarioInfo = db.collection('vestuario_events').doc(id).onSnapshot(doc => {
+        const produto = doc.data();
+        if(!produto){ info.className = 'empty'; info.textContent = 'Produto não encontrado.'; document.getElementById('anexosVestuarioPublico').innerHTML = ''; return; }
+        info.className = 'event-box';
+        info.innerHTML = `<h3>${escapeHtml(produto.nome || '')}</h3>
+          <div class="muted"><b>Data limite:</b> ${formatarData(produto.dataLimite)}</div>
+          ${produto.observacao ? `<div style="margin-top:10px"><b>Observação:</b> ${escapeHtml(produto.observacao)}</div>` : ''}
+          ${produto.descricao ? `<div style="margin-top:12px">${escapeHtml(produto.descricao).replace(/\n/g,'<br>')}</div>` : ''}`;
+        document.getElementById('anexosVestuarioPublico').innerHTML = gerarHtmlAnexos(produto.anexos);
+      });
+
+      unsubscribeVestuarioPublico = db.collection('vestuario_events').doc(id).collection('escolhas').onSnapshot(snap => {
+        const produto = cacheVestuarioEventos.find(e => e.id === id);
+        cacheVestuarioEscolhasPublico = snap.docs.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
+        const tbody = document.getElementById('listaVestuarioPublico');
+        tbody.innerHTML = '';
+        cacheVestuarioEscolhasPublico.forEach(item => {
+          const nomeProduto = item.produtoNome || produto?.nome || '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHtml(item.nome || '')}</td><td>${escapeHtml(nomeProduto)}</td><td>${escapeHtml(item.tamanho || '')}</td><td>${escapeHtml(String(item.qtd || 1))}</td>`;
+          tbody.appendChild(tr);
+        });
+        document.getElementById('contadorVestuarioEscolhas').textContent = String(cacheVestuarioEscolhasPublico.length);
+      });
+    }
+
+
+    function configurarAcoesAdmin(){
+      const tabelaPedais = document.getElementById('listaPedais');
+      const tabelaInscritos = document.getElementById('listaInscritosAdmin');
+      const tabelaProdutos = document.getElementById('listaVestuarioEventos');
+      const tabelaPedidos = document.getElementById('listaVestuarioEscolhasAdmin');
+
+      if(tabelaPedais && !tabelaPedais.dataset.bound){
+        tabelaPedais.dataset.bound = '1';
+        tabelaPedais.addEventListener('click', (event) => {
+          const btnEditar = event.target.closest('.js-pedal-editar');
+          const btnExcluir = event.target.closest('.js-pedal-excluir');
+          if(btnToggle){
+        const id = btnToggle.dataset.pedalId || '';
+        if(id) alternarStatusPedalPorId(id);
+        return;
+      }
+      if(btnEditar){
+            const id = btnEditar.dataset.pedalId || '';
+            if(id) editarPedalPorId(id);
+            return;
+          }
+          if(btnExcluir){
+            const id = btnExcluir.dataset.pedalId || '';
+            if(id) excluirPedalPorId(id);
+          }
+        });
+      }
+
+      if(tabelaInscritos && !tabelaInscritos.dataset.bound){
+        tabelaInscritos.dataset.bound = '1';
+        tabelaInscritos.addEventListener('click', (event) => {
+          const btnEditar = event.target.closest('.js-inscrito-editar');
+          const btnExcluir = event.target.closest('.js-inscrito-excluir');
+          if(btnEditar){
+            const id = btnEditar.dataset.inscritoId || '';
+            if(id) editarInscritoAdmin(id);
+            return;
+          }
+          if(btnExcluir){
+            const id = btnExcluir.dataset.inscritoId || '';
+            if(id) excluirInscritoAdmin(id);
+          }
+        });
+      }
+
+      if(tabelaProdutos && !tabelaProdutos.dataset.bound){
+        tabelaProdutos.dataset.bound = '1';
+        tabelaProdutos.addEventListener('click', (event) => {
+          const btnEditar = event.target.closest('.js-produto-editar');
+          const btnExcluir = event.target.closest('.js-produto-excluir');
+          if(btnEditar){
+            const id = btnEditar.dataset.produtoId || '';
+            if(id) editarVestuarioEventoPorId(id);
+            return;
+          }
+          if(btnExcluir){
+            const id = btnExcluir.dataset.produtoId || '';
+            if(id) excluirVestuarioEventoPorId(id);
+          }
+        });
+      }
+      if(tabelaPedidos && !tabelaPedidos.dataset.bound){
+        tabelaPedidos.dataset.bound = '1';
+        tabelaPedidos.addEventListener('click', (event) => {
+          const btnEditar = event.target.closest('.js-pedido-editar');
+          const btnExcluir = event.target.closest('.js-pedido-excluir');
+          if(btnEditar){
+            const id = btnEditar.dataset.pedidoId || '';
+            if(id) editarVestuarioEscolha(id);
+            return;
+          }
+          if(btnExcluir){
+            const id = btnExcluir.dataset.pedidoId || '';
+            if(id) excluirVestuarioEscolha(id);
+          }
+        });
+      }
+    }
+
+    async function salvarEscolhaVestuarioPublica(){
+      if(!validarOperacaoCliente('msgVestuarioPublico')) return;
+      const eventoId = document.getElementById('vestuarioEventoSelect').value;
+      const produto = cacheVestuarioEventos.find(e => e.id === eventoId);
+      const nome = document.getElementById('vestuarioNomePublico').value.trim();
+      const tamanho = document.getElementById('vestuarioTamanhoPublico').value;
+      const qtd = Math.max(1, Number(document.getElementById('vestuarioQtdPublico').value || 1));
+      const whats = document.getElementById('vestuarioWhatsPublico').value.trim();
+      const observacao = document.getElementById('vestuarioObsPublico').value.trim();
+
+      if(!eventoId) return mostrarMensagem('msgVestuarioPublico', 'Selecione o produto.', true);
+      if(!nome) return mostrarMensagem('msgVestuarioPublico', 'Informe seu nome.', true);
+
+      await db.collection('vestuario_events').doc(eventoId).collection('escolhas').add({
+        nome,
+        produtoId: eventoId,
+        produtoNome: produto?.nome || '',
+        tamanho,
+        qtd,
+        whats,
+        observacao,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      document.getElementById('vestuarioNomePublico').value = '';
+      document.getElementById('vestuarioTamanhoPublico').value = 'P';
+      document.getElementById('vestuarioQtdPublico').value = 1;
+      document.getElementById('vestuarioWhatsPublico').value = '';
+      document.getElementById('vestuarioObsPublico').value = '';
+      mostrarMensagem('msgVestuarioPublico', 'Pedido enviado com sucesso.');
+    }
+
+    function carregarVestuarioEscolhasAdmin(eventoId){
+      if(unsubscribeVestuarioEscolhasAdmin) unsubscribeVestuarioEscolhasAdmin();
+      const tbody = document.getElementById('listaVestuarioEscolhasAdmin');
+      tbody.innerHTML = '';
+      cacheVestuarioEscolhasAdmin = [];
+      document.getElementById('contadorVestuarioEscolhasAdmin').textContent = '0';
+      cancelarEdicaoVestuarioEscolha(true);
+
+      if(!eventoId) return limparPainelAdminVestuario();
+      const produto = cacheVestuarioEventos.find(e => e.id === eventoId);
+      document.getElementById('adminVestuarioTitulo').textContent = produto ? `Gerencie os pedidos de ${produto.nome || produto.id}.` : 'Gerencie os pedidos do produto selecionado.';
+
+      unsubscribeVestuarioEscolhasAdmin = db.collection('vestuario_events').doc(eventoId).collection('escolhas').onSnapshot(snap => {
+        cacheVestuarioEscolhasAdmin = snap.docs.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
+        tbody.innerHTML = '';
+        document.getElementById('contadorVestuarioEscolhasAdmin').textContent = String(cacheVestuarioEscolhasAdmin.length);
+        document.getElementById('emptyVestuarioAdmin').classList.toggle('hidden', cacheVestuarioEscolhasAdmin.length > 0);
+        cacheVestuarioEscolhasAdmin.forEach(item => {
+          const nomeProduto = item.produtoNome || produto?.nome || '';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHtml(item.nome || '')}</td><td>${escapeHtml(nomeProduto)}</td><td>${escapeHtml(item.tamanho || '')}</td><td>${escapeHtml(String(item.qtd || 1))}</td><td>${escapeHtml(item.whats || '')}</td><td>${escapeHtml(item.observacao || '')}</td>
+          <td class="actions-cell"><div class="inline-actions"><button class="btn ghost mini js-pedido-editar" type="button" data-pedido-id="${escapeAttribute(item.id)}">Editar</button><button class="btn danger mini js-pedido-excluir" type="button" data-pedido-id="${escapeAttribute(item.id)}">Excluir</button></div></td>`;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    async function exportarVestuarioCSV(){
+      const eventoId = getVestuarioEventoAdminSelecionado();
+      if(!eventoId) return mostrarMensagem('msgVestuarioAdmin', 'Selecione um produto para baixar os pedidos.', true);
+      const produto = cacheVestuarioEventos.find(e => e.id === eventoId);
+      const linhas = [
+        ['Produto','Data limite','Nome','Tamanho','Quantidade','WhatsApp','Observação'],
+        ...cacheVestuarioEscolhasAdmin.map(item => [produto?.nome || eventoId, produto?.dataLimite || '', item.nome || '', item.tamanho || '', item.qtd || 1, item.whats || '', item.observacao || ''])
+      ];
+      if(linhas.length === 1) return mostrarMensagem('msgVestuarioAdmin', 'Não há pedidos para exportar.', true);
+      const nomeArquivo = `pedidos_${slugify(produto?.nome || eventoId)}_${new Date().toISOString().slice(0,10)}.csv`;
+      await compartilharOuBaixarCSV(linhas, nomeArquivo, 'Pedidos de produtos', 'Segue a tabela de pedidos de produtos.', 'msgVestuarioAdmin');
+    }
+
+    function editarVestuarioEscolha(id){
+      const item = cacheVestuarioEscolhasAdmin.find(x => x.id === id);
+      const eventoAtual = getVestuarioEventoAdminSelecionado();
+      const produto = cacheVestuarioEventos.find(e => e.id === eventoAtual);
+      if(!item) return;
+      vestuarioEscolhaEditId = id;
+      vestuarioEscolhaEditEventoId = eventoAtual;
+      document.getElementById('boxEditarEscolhaVestuario').classList.remove('hidden');
+      document.getElementById('editVestuarioNome').value = item.nome || '';
+      preencherSelectProdutoPedido(item.produtoId || eventoAtual || produto?.id || '');
+      document.getElementById('editVestuarioTamanho').value = item.tamanho || 'P';
+      document.getElementById('editVestuarioQtd').value = item.qtd || 1;
+      document.getElementById('editVestuarioWhats').value = item.whats || '';
+      document.getElementById('editVestuarioObservacao').value = item.observacao || '';
+      mostrarMensagem('msgVestuarioEscolhasAdmin', '');
+    }
+
+    async function salvarEdicaoVestuarioEscolha(){
+      if(!validarAdmin()) return mostrarMensagem('msgVestuarioEscolhasAdmin', 'Senha do admin incorreta.', true);
+      const eventoOrigemId = vestuarioEscolhaEditEventoId || getVestuarioEventoAdminSelecionado();
+      const novoEventoId = document.getElementById('editVestuarioProduto').value;
+      const produto = cacheVestuarioEventos.find(e => e.id === novoEventoId);
+      if(!eventoOrigemId || !novoEventoId || !vestuarioEscolhaEditId) return mostrarMensagem('msgVestuarioEscolhasAdmin', 'Selecione um pedido para editar.', true);
+
+      const nome = document.getElementById('editVestuarioNome').value.trim();
+      const tamanho = document.getElementById('editVestuarioTamanho').value;
+      const qtd = Math.max(1, Number(document.getElementById('editVestuarioQtd').value || 1));
+      const whats = document.getElementById('editVestuarioWhats').value.trim();
+      const observacao = document.getElementById('editVestuarioObservacao').value.trim();
+      if(!nome) return mostrarMensagem('msgVestuarioEscolhasAdmin', 'Informe o nome.', true);
+
+      const payload = {
+        nome,
+        produtoId: novoEventoId,
+        produtoNome: produto?.nome || '',
+        tamanho,
+        qtd,
+        whats,
+        observacao,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      if(novoEventoId === eventoOrigemId){
+        await db.collection('vestuario_events').doc(eventoOrigemId).collection('escolhas').doc(vestuarioEscolhaEditId).set(payload, { merge:true });
+      } else {
+        const origemRef = db.collection('vestuario_events').doc(eventoOrigemId).collection('escolhas').doc(vestuarioEscolhaEditId);
+        const destinoRef = db.collection('vestuario_events').doc(novoEventoId).collection('escolhas').doc(vestuarioEscolhaEditId);
+        await destinoRef.set(payload, { merge:true });
+        await origemRef.delete();
+        vestuarioAtualCodigo = novoEventoId;
+        document.getElementById('vestuarioEventoExistente').value = novoEventoId;
+        await carregarVestuarioEventoParaEdicao();
+      }
+      cancelarEdicaoVestuarioEscolha();
+      mostrarMensagem('msgVestuarioEscolhasAdmin', 'Pedido atualizado com sucesso.');
+    }
+
+    async function excluirVestuarioEscolha(id){
+      if(!validarAdmin()) return mostrarMensagem('msgVestuarioEscolhasAdmin', 'Senha do admin incorreta.', true);
+      const eventoId = getVestuarioEventoAdminSelecionado();
+      if(!eventoId) return;
+      const item = cacheVestuarioEscolhasAdmin.find(x => x.id === id);
+      if(!item) return;
+      if(!confirm(`Excluir o pedido de ${item.nome || 'esta pessoa'}?`)) return;
+      await db.collection('vestuario_events').doc(eventoId).collection('escolhas').doc(id).delete();
+      if(vestuarioEscolhaEditId === id) cancelarEdicaoVestuarioEscolha();
+      mostrarMensagem('msgVestuarioEscolhasAdmin', 'Pedido removido com sucesso.');
+    }
+
+    function cancelarEdicaoVestuarioEscolha(silencioso=false){
+      vestuarioEscolhaEditId = '';
+      vestuarioEscolhaEditEventoId = '';
+      document.getElementById('boxEditarEscolhaVestuario').classList.add('hidden');
+      document.getElementById('editVestuarioNome').value = '';
+      preencherSelectProdutoPedido(getVestuarioEventoAdminSelecionado());
+      document.getElementById('editVestuarioTamanho').value = 'P';
+      document.getElementById('editVestuarioQtd').value = 1;
+      document.getElementById('editVestuarioWhats').value = '';
+      document.getElementById('editVestuarioObservacao').value = '';
+      if(!silencioso) mostrarMensagem('msgVestuarioEscolhasAdmin', '');
+    }
+
+
+function atualizarMetricasClientes(){
+  const total = cacheClientes.length;
+  const ativos = cacheClientes.filter(c => (c.status || '') === 'Ativo').length;
+  const pro = cacheClientes.filter(c => ['Pro','Premium','Vitalício'].includes(c.plano || '')).length;
+  const teste = cacheClientes.filter(c => (c.status || '') === 'Teste').length;
+  document.getElementById('metricClientesTotal').textContent = String(total);
+  document.getElementById('metricClientesAtivos').textContent = String(ativos);
+  document.getElementById('metricClientesPro').textContent = String(pro);
+  document.getElementById('metricClientesTeste').textContent = String(teste);
+  document.getElementById('contadorClientesDev').textContent = String(total);
+}
+
+function limparFormularioClienteDev(){
+  clienteAtualId = '';
+  document.getElementById('clienteExistente').value = '';
+  document.getElementById('clienteNome').value = '';
+  document.getElementById('clienteSistemaNome').value = '';
+  document.getElementById('clienteSlug').value = '';
+  document.getElementById('clientePlano').value = 'Demonstração';
+  document.getElementById('clienteStatus').value = 'Ativo';
+  document.getElementById('clienteValidade').value = '';
+  document.getElementById('clienteCor').value = DEFAULT_BRAND.accent;
+  document.getElementById('clienteResponsavel').value = '';
+  document.getElementById('clienteWhats').value = '';
+  document.getElementById('clienteCidade').value = '';
+  document.getElementById('clienteDominio').value = '';
+  document.getElementById('clienteModCiclismo').checked = true;
+  document.getElementById('clienteModVestuario').checked = true;
+  document.getElementById('clienteModExportacao').checked = true;
+  document.getElementById('clienteModPersonalizacao').checked = true;
+  document.getElementById('clienteObs').value = '';
+  document.getElementById('linkClienteDev').textContent = 'Salve um cliente para gerar o link.';
+  mostrarMensagem('msgDev', '');
+}
+
+async function salvarClienteDev(){
+  if(!validarDesenvolvedor()) return mostrarMensagem('msgDev', 'Senha do desenvolvedor incorreta.', true);
+  const nome = document.getElementById('clienteNome').value.trim();
+  const sistemaNome = document.getElementById('clienteSistemaNome').value.trim();
+  const slugInformado = document.getElementById('clienteSlug').value.trim();
+  const slug = slugify(slugInformado || nome);
+  const plano = document.getElementById('clientePlano').value;
+  const status = document.getElementById('clienteStatus').value;
+  const validade = document.getElementById('clienteValidade').value;
+  const cor = document.getElementById('clienteCor').value || DEFAULT_BRAND.accent;
+  const responsavel = document.getElementById('clienteResponsavel').value.trim();
+  const whats = document.getElementById('clienteWhats').value.trim();
+  const cidade = document.getElementById('clienteCidade').value.trim();
+  const dominio = document.getElementById('clienteDominio').value.trim();
+  const obs = document.getElementById('clienteObs').value.trim();
+  const modCiclismo = document.getElementById('clienteModCiclismo').checked;
+  const modVestuario = document.getElementById('clienteModVestuario').checked;
+  const modExportacao = document.getElementById('clienteModExportacao').checked;
+  const modPersonalizacao = document.getElementById('clienteModPersonalizacao').checked;
+  if(!nome) return mostrarMensagem('msgDev', 'Informe o nome do cliente.', true);
+  if(!slug) return mostrarMensagem('msgDev', 'Informe um slug válido.', true);
+
+  const conflito = await db.collection('developer_clients').where('slug', '==', slug).get();
+  const conflitoReal = conflito.docs.find(d => d.id !== clienteAtualId);
+  if(conflitoReal) return mostrarMensagem('msgDev', 'Este slug já está em uso.', true);
+
+  const id = clienteAtualId || slug;
+  const ref = db.collection('developer_clients').doc(id);
+  const snap = await ref.get();
+  const payload = {
+    nome, sistemaNome, slug, plano, status, validade, cor,
+    responsavel, whats, cidade, dominio, obs,
+    modCiclismo, modVestuario, modExportacao, modPersonalizacao,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(!snap.exists) payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  await ref.set(payload, { merge:true });
+  clienteAtualId = id;
+  document.getElementById('clienteExistente').value = id;
+  document.getElementById('clienteSlug').value = slug;
+  document.getElementById('linkClienteDev').textContent = gerarLinkCliente(slug);
+  await carregarClientes();
+  mostrarMensagem('msgDev', adminEmail ? 'Cliente salvo. O acesso do admin será criado ou atualizado automaticamente no Firebase Auth após o deploy das Functions V4.' : 'Cliente salvo com sucesso.');
+}
+
+async function carregarClientes(){
+  const snap = await db.collection('developer_clients').get();
+  cacheClientes = snap.docs.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
+  const select = document.getElementById('clienteExistente');
+  const body = document.getElementById('listaClientesDev');
+  select.innerHTML = '<option value="">Novo cliente</option>';
+  body.innerHTML = '';
+  cacheClientes.forEach(cliente => {
+    select.innerHTML += `<option value="${escapeAttribute(cliente.id)}">${escapeHtml(cliente.nome || cliente.id)}</option>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><button class="btn ghost mini" onclick="editarClientePorId(${JSON.stringify(cliente.id)})">${escapeHtml(cliente.nome || cliente.id)}</button></td><td>${escapeHtml(cliente.plano || '')}</td><td>${escapeHtml(cliente.status || '')}</td><td>${formatarData(cliente.validade || '')}</td>`;
+    body.appendChild(tr);
+  });
+  atualizarMetricasClientes();
+  if(clienteAtualId && cacheClientes.some(c => c.id === clienteAtualId)) document.getElementById('clienteExistente').value = clienteAtualId;
+}
+
+function editarClientePorId(id){
+  document.getElementById('clienteExistente').value = id;
+  carregarClienteParaEdicao();
+  atualizarEstadoAcesso();
+  document.getElementById('adminSenha').value = '';
+  document.getElementById('devSenha').value = '';
+  abrirAba('dev');
+  abrirSubAbaDev('clientes');
+}
+
+async function carregarClienteParaEdicao(){
+  const id = document.getElementById('clienteExistente').value;
+  if(!id) return limparFormularioClienteDev();
+  const doc = await db.collection('developer_clients').doc(id).get();
+  if(!doc.exists) return;
+  const c = doc.data();
+  clienteAtualId = id;
+  document.getElementById('clienteNome').value = c.nome || '';
+  document.getElementById('clienteSistemaNome').value = c.sistemaNome || '';
+  document.getElementById('clienteSlug').value = c.slug || '';
+  document.getElementById('clientePlano').value = c.plano || 'Demonstração';
+  document.getElementById('clienteStatus').value = c.status || 'Ativo';
+  document.getElementById('clienteValidade').value = c.validade || '';
+  document.getElementById('clienteCor').value = c.cor || DEFAULT_BRAND.accent;
+  document.getElementById('clienteResponsavel').value = c.responsavel || '';
+  document.getElementById('clienteWhats').value = c.whats || '';
+  document.getElementById('clienteCidade').value = c.cidade || '';
+  document.getElementById('clienteDominio').value = c.dominio || '';
+  document.getElementById('clienteModCiclismo').checked = c.modCiclismo !== false;
+  document.getElementById('clienteModVestuario').checked = c.modVestuario !== false;
+  document.getElementById('clienteModExportacao').checked = c.modExportacao !== false;
+  document.getElementById('clienteModPersonalizacao').checked = c.modPersonalizacao !== false;
+  document.getElementById('clienteObs').value = c.obs || '';
+  document.getElementById('linkClienteDev').textContent = gerarLinkCliente(c.slug || '');
+  mostrarMensagem('msgDev', 'Cliente carregado para edição.');
+}
+
+async function excluirClienteAtualDev(){
+  if(!validarDesenvolvedor()) return mostrarMensagem('msgDev', 'Senha do desenvolvedor incorreta.', true);
+  const id = clienteAtualId || document.getElementById('clienteExistente').value;
+  if(!id) return mostrarMensagem('msgDev', 'Selecione um cliente para excluir.', true);
+  const cliente = cacheClientes.find(c => c.id === id);
+  if(!confirm(`Excluir o cliente ${cliente?.nome || id}?`)) return;
+  await db.collection('developer_clients').doc(id).delete();
+  limparFormularioClienteDev();
+  await carregarClientes();
+  mostrarMensagem('msgDev', 'Cliente excluído com sucesso.');
+}
+
+function copiarLinkClienteDev(){
+  const texto = document.getElementById('linkClienteDev').textContent;
+  if(!texto || texto.includes('Salve um cliente')) return;
+  navigator.clipboard.writeText(texto);
+  mostrarMensagem('msgDev', 'Link copiado.');
+}
+
+function abrirLinkClienteDev(){
+  const texto = document.getElementById('linkClienteDev').textContent;
+  if(!texto || texto.includes('Salve um cliente')) return;
+  window.open(texto, '_blank');
+}
+
+
+function combinarDataHoraLocal(dataISO, horario='00:00', fimDoDia=false){
+  if(!dataISO) return null;
+  const horaBase = horario && String(horario).includes(':') ? String(horario) : (fimDoDia ? '23:59' : '00:00');
+  const completo = `${dataISO}T${horaBase}${horaBase.length === 5 ? ':00' : ''}`;
+  let dt = new Date(completo);
+  if(Number.isNaN(dt.getTime())){
+    const [ano, mes, dia] = String(dataISO).split('-').map(Number);
+    const [hora, minuto] = horaBase.split(':').map(Number);
+    dt = new Date(ano || 0, (mes || 1) - 1, dia || 1, hora || 0, minuto || 0, fimDoDia ? 59 : 0, 0);
+  }
+  if(fimDoDia){
+    dt.setHours(23,59,59,999);
+  }
+  return dt;
+}
+
+function isReabertoManual(item){
+  return String(item?.statusManual || '').toLowerCase() === 'reaberto';
+}
+
+function isFechadoManual(item){
+  return String(item?.statusManual || '').toLowerCase() === 'fechado';
+}
+
+function isPedalEncerrado(pedal){
+  if(isReabertoManual(pedal)) return false;
+  if(isFechadoManual(pedal)) return true;
+  const dt = combinarDataHoraLocal(pedal?.data, pedal?.horario || '00:00');
+  return !!dt && dt.getTime() < Date.now();
+}
+
+function isProdutoEncerrado(produto){
+  if(isReabertoManual(produto)) return false;
+  if(isFechadoManual(produto)) return true;
+  const dt = combinarDataHoraLocal(produto?.dataLimite, '23:59', true);
+  return !!dt && dt.getTime() < Date.now();
+}
+
+function isPedalHistorico(item){
+  if(isFechadoManual(item) || isReabertoManual(item)) return false;
+  const dt = combinarDataHoraLocal(item?.data, item?.horario || '00:00');
+  return !!dt && dt.getTime() < Date.now();
+}
+
+function isProdutoHistorico(item){
+  if(isFechadoManual(item) || isReabertoManual(item)) return false;
+  const dt = combinarDataHoraLocal(item?.dataLimite, '23:59', true);
+  return !!dt && dt.getTime() < Date.now();
+}
+
+function textoStatusPedal(pedal){
+  if(isFechadoManual(pedal)) return 'Fechado';
+  return isPedalEncerrado(pedal) ? 'Encerrado' : 'Aberto';
+}
+
+function textoStatusProduto(produto){
+  if(isFechadoManual(produto)) return 'Fechado';
+  return isProdutoEncerrado(produto) ? 'Encerrado' : 'Aberto';
+}
+
+function atualizarBloqueioInscricaoPublica(pedal){
+  const bloqueado = !!pedal && isPedalEncerrado(pedal);
+  ['nomeCiclista','nivelCiclista','whatsCiclista','cidadeCiclista','categoriaCiclista'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.disabled = bloqueado;
+  });
+  const btn = document.querySelector('#abaInscricao .actions .btn');
+  if(btn){
+    btn.disabled = bloqueado;
+    btn.textContent = bloqueado ? 'Evento encerrado' : 'Confirmar inscrição';
+  }
+  const box = document.getElementById('statusInscricaoPublica');
+  if(box){
+    box.innerHTML = bloqueado ? '<div class="notice error">Este evento foi encerrado. As informações e a lista continuam visíveis, mas novas inscrições estão bloqueadas.</div>' : '';
+  }
+}
+
+function atualizarBloqueioPedidoPublico(produto){
+  const bloqueado = !!produto && isProdutoEncerrado(produto);
+  ['vestuarioNomePublico','vestuarioTamanhoPublico','vestuarioQtdPublico','vestuarioWhatsPublico','vestuarioObsPublico'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.disabled = bloqueado;
+  });
+  const btn = document.querySelector('#abaVestuario .actions .btn');
+  if(btn){
+    btn.disabled = bloqueado;
+    btn.textContent = bloqueado ? 'Pedido encerrado' : 'Enviar pedido';
+  }
+  const box = document.getElementById('statusPedidoPublico');
+  if(box){
+    box.innerHTML = bloqueado ? '<div class="notice error">Este pedido foi encerrado. As referências e a lista continuam visíveis, mas novos envios estão bloqueados.</div>' : '';
+  }
+}
+
+function renderizarHistoricoAdmin(){
+  const historicoPedais = cachePedais.filter(isPedalHistorico).sort((a,b) => ((b.data || '')).localeCompare(a.data || '') || ((b.horario || '')).localeCompare(a.horario || '') || (a.nome || '').localeCompare(b.nome || ''));
+  const historicoProdutos = cacheVestuarioEventos.filter(isProdutoHistorico).sort((a,b) => ((b.dataLimite || '')).localeCompare(a.dataLimite || '') || (a.nome || '').localeCompare(b.nome || ''));
+
+  const tbodyPedais = document.getElementById('listaHistoricoPedais');
+  const tbodyProdutos = document.getElementById('listaHistoricoProdutos');
+  if(tbodyPedais){
+    tbodyPedais.innerHTML = '';
+    if(!historicoPedais.length){
+      tbodyPedais.innerHTML = '<tr><td colspan="5" class="muted">Nenhum pedal encerrado.</td></tr>';
+    }else{
+      historicoPedais.forEach(pedal => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(pedal.nome || pedal.id)}</td><td>${formatarData(pedal.data)}</td><td>${escapeHtml(pedal.horario || '')}</td><td>Encerrado</td><td class="actions-cell"><div class="inline-actions"><button class="btn mini js-historico-pedal-reabrir" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">Reabrir</button><button class="btn ghost mini js-historico-pedal-editar" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">Editar</button><button class="btn danger mini js-historico-pedal-excluir" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">Excluir</button></div></td>`;
+        tbodyPedais.appendChild(tr);
+      });
+    }
+  }
+  if(tbodyProdutos){
+    tbodyProdutos.innerHTML = '';
+    if(!historicoProdutos.length){
+      tbodyProdutos.innerHTML = '<tr><td colspan="4" class="muted">Nenhum pedido encerrado.</td></tr>';
+    }else{
+      historicoProdutos.forEach(produto => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(produto.nome || produto.id)}</td><td>${formatarData(produto.dataLimite)}</td><td>Encerrado</td><td class="actions-cell"><div class="inline-actions"><button class="btn mini js-historico-produto-reabrir" type="button" data-produto-id="${escapeAttribute(produto.id)}">Reabrir</button><button class="btn ghost mini js-historico-produto-editar" type="button" data-produto-id="${escapeAttribute(produto.id)}">Editar</button><button class="btn danger mini js-historico-produto-excluir" type="button" data-produto-id="${escapeAttribute(produto.id)}">Excluir</button></div></td>`;
+        tbodyProdutos.appendChild(tr);
+      });
+    }
+  }
+  const cp = document.getElementById('contadorHistoricoPedais');
+  const cv = document.getElementById('contadorHistoricoProdutos');
+  if(cp) cp.textContent = String(historicoPedais.length);
+  if(cv) cv.textContent = String(historicoProdutos.length);
+}
+
+function abrirSubAbaAdmin(aba){
+  document.getElementById('subPedal').classList.toggle('hidden', aba !== 'pedal');
+  document.getElementById('subRoupas').classList.toggle('hidden', aba !== 'roupas');
+  const subHistorico = document.getElementById('subHistorico');
+  if(subHistorico) subHistorico.classList.toggle('hidden', aba !== 'historico');
+  document.getElementById('subPedalBtn').classList.toggle('active', aba === 'pedal');
+  document.getElementById('subRoupasBtn').classList.toggle('active', aba === 'roupas');
+  const subHistoricoBtn = document.getElementById('subHistoricoBtn');
+  if(subHistoricoBtn) subHistoricoBtn.classList.toggle('active', aba === 'historico');
+  document.getElementById('pedalCards').classList.toggle('hidden', aba !== 'pedal');
+  document.getElementById('vestuarioCards').classList.toggle('hidden', aba !== 'roupas');
+  const historicoCards = document.getElementById('historicoCards');
+  if(historicoCards) historicoCards.classList.toggle('hidden', aba !== 'historico');
+  if(aba === 'pedal') carregarInscritosAdmin(getPedalAdminSelecionado());
+  if(aba === 'roupas') carregarVestuarioEscolhasAdmin(getVestuarioEventoAdminSelecionado());
+  if(aba === 'historico') renderizarHistoricoAdmin();
+}
+
+function montarOpcaoHistorico(texto){
+  return `[Histórico] ${texto}`;
+}
+
+async function consultarComEscopoLegado(collectionName, slug){
+  let ref = db.collection(collectionName);
+  if(!slug) {
+    const snap = await ref.get();
+    return snap.docs;
+  }
+  const scopedSnap = await ref.where('clienteSlug', '==', slug).get();
+  if(!scopedSnap.empty) return scopedSnap.docs;
+  const legacySnap = await ref.where('clienteSlug', '==', '').get();
+  return legacySnap.docs;
+}
+
+async function carregarPedais(){
+  const docsPedais = await consultarComEscopoLegado('events', clienteContexto?.slug || '');
+  cachePedais = docsPedais.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.data || '').localeCompare(b.data || '') || (a.horario || '').localeCompare(b.horario || '') || (a.nome || '').localeCompare(b.nome || ''));
+
+  const ativos = cachePedais.filter(item => !isPedalHistorico(item));
+  const selectEdit = document.getElementById('pedalExistente');
+  const selectInsc = document.getElementById('inscricaoPedalSelect');
+  const bodyPedais = document.getElementById('listaPedais');
+  selectEdit.innerHTML = '<option value="">Novo pedal</option>';
+  selectInsc.innerHTML = '<option value="">Selecione</option>';
+  bodyPedais.innerHTML = '';
+
+  const adicionarOpcao = (select, pedal, historico=false) => {
+    const option = document.createElement('option');
+    option.value = pedal.id;
+    const base = `${pedal.nome || pedal.id} - ${formatarData(pedal.data)}`;
+    option.textContent = historico ? montarOpcaoHistorico(base) : base;
+    select.appendChild(option);
+  };
+
+  ativos.forEach(pedal => {
+    adicionarOpcao(selectEdit, pedal, false);
+    if(!isPedalEncerrado(pedal)) adicionarOpcao(selectInsc, pedal, false);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(pedal.nome || pedal.id)}</td><td>${formatarData(pedal.data)}</td><td>${escapeHtml(pedal.horario || '')}</td><td>${textoStatusPedal(pedal)}</td><td class="actions-cell"><div class="inline-actions"><button class="btn secondary mini js-pedal-toggle" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">${isPedalEncerrado(pedal) ? 'Abrir' : 'Fechar'}</button><button class="btn ghost mini js-pedal-editar" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">Editar</button><button class="btn danger mini js-pedal-excluir" type="button" data-pedal-id="${escapeAttribute(pedal.id)}">Excluir</button></div></td>`;
+    bodyPedais.appendChild(tr);
+  });
+
+  const pedalAtualEdicao = pedalAtualCodigo && cachePedais.find(p => p.id === pedalAtualCodigo);
+  if(pedalAtualEdicao && !ativos.some(p => p.id === pedalAtualEdicao.id)){
+    adicionarOpcao(selectEdit, pedalAtualEdicao, true);
+    selectEdit.value = pedalAtualEdicao.id;
+  } else if(pedalAtualCodigo && ativos.some(p => p.id === pedalAtualCodigo)){
+    selectEdit.value = pedalAtualCodigo;
+  }
+
+  const pedalAtualPublicoItem = pedalAtualInscricao && cachePedais.find(p => p.id === pedalAtualInscricao);
+  if(pedalAtualPublicoItem && !ativos.some(p => p.id === pedalAtualPublicoItem.id) && !isPedalEncerrado(pedalAtualPublicoItem)){
+    adicionarOpcao(selectInsc, pedalAtualPublicoItem, true);
+    selectInsc.value = pedalAtualPublicoItem.id;
+  } else if(pedalAtualInscricao && ativos.some(p => p.id === pedalAtualInscricao) && !isPedalEncerrado(pedalAtualPublicoItem || {})){
+    selectInsc.value = pedalAtualInscricao;
+  }
+
+  document.getElementById('contadorPedais').textContent = String(ativos.length);
+  renderizarHistoricoAdmin();
+
+  if(pedalAtualInscricao && cachePedais.some(p => p.id === pedalAtualInscricao)){
+    carregarInscricaoPorPedal(pedalAtualInscricao);
+  }
+}
+
+async function carregarVestuarioEventos(){
+  const docsProdutos = await consultarComEscopoLegado('vestuario_events', clienteContexto?.slug || '');
+  cacheVestuarioEventos = docsProdutos.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.dataLimite || '').localeCompare(b.dataLimite || '') || (a.nome || '').localeCompare(b.nome || ''));
+
+  const ativos = cacheVestuarioEventos.filter(item => !isProdutoHistorico(item));
+  const selectAdmin = document.getElementById('vestuarioEventoExistente');
+  const selectPublico = document.getElementById('vestuarioEventoSelect');
+  const tabela = document.getElementById('listaVestuarioEventos');
+  selectAdmin.innerHTML = '<option value="">Novo produto</option>';
+  selectPublico.innerHTML = '<option value="">Selecione</option>';
+  tabela.innerHTML = '';
+
+  const adicionarOpcao = (select, produto, historico=false) => {
+    const option = document.createElement('option');
+    option.value = produto.id;
+    const base = `${produto.nome || produto.id}${produto.dataLimite ? ' - ' + formatarData(produto.dataLimite) : ''}`;
+    option.textContent = historico ? montarOpcaoHistorico(base) : base;
+    select.appendChild(option);
+  };
+
+  ativos.forEach(produto => {
+    adicionarOpcao(selectAdmin, produto, false);
+    if(!isProdutoEncerrado(produto)) adicionarOpcao(selectPublico, produto, false);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><button class="btn ghost mini js-produto-editar" type="button" data-produto-id="${escapeAttribute(produto.id)}">${escapeHtml(produto.nome || produto.id)}</button></td><td>${formatarData(produto.dataLimite)}</td><td>${textoStatusProduto(produto)}</td><td>${escapeHtml(produto.observacao || '')}</td><td class="actions-cell"><div class="inline-actions"><button class="btn secondary mini js-produto-toggle" type="button" data-produto-id="${escapeAttribute(produto.id)}">${isProdutoEncerrado(produto) ? 'Abrir' : 'Fechar'}</button><button class="btn ghost mini js-produto-editar" type="button" data-produto-id="${escapeAttribute(produto.id)}">Editar</button><button class="btn danger mini js-produto-excluir" type="button" data-produto-id="${escapeAttribute(produto.id)}">Excluir</button></div></td>`;
+    tabela.appendChild(tr);
+  });
+
+  const produtoAtualEdicao = vestuarioAtualCodigo && cacheVestuarioEventos.find(e => e.id === vestuarioAtualCodigo);
+  if(produtoAtualEdicao && !ativos.some(e => e.id === produtoAtualEdicao.id)){
+    adicionarOpcao(selectAdmin, produtoAtualEdicao, true);
+    selectAdmin.value = produtoAtualEdicao.id;
+  } else if(vestuarioAtualCodigo && ativos.some(e => e.id === vestuarioAtualCodigo)){
+    selectAdmin.value = vestuarioAtualCodigo;
+  }
+
+  const produtoAtualPublico = vestuarioAtualPublico && cacheVestuarioEventos.find(e => e.id === vestuarioAtualPublico);
+  if(produtoAtualPublico && !ativos.some(e => e.id === produtoAtualPublico.id) && !isProdutoEncerrado(produtoAtualPublico)){
+    adicionarOpcao(selectPublico, produtoAtualPublico, true);
+    selectPublico.value = produtoAtualPublico.id;
+  } else if(vestuarioAtualPublico && ativos.some(e => e.id === vestuarioAtualPublico) && !isProdutoEncerrado(produtoAtualPublico || {})){
+    selectPublico.value = vestuarioAtualPublico;
+  }
+
+  document.getElementById('contadorVestuarioEventos').textContent = String(ativos.length);
+  preencherSelectProdutoPedido(vestuarioEscolhaEditEventoId || getVestuarioEventoAdminSelecionado());
+  renderizarHistoricoAdmin();
+
+  if(vestuarioAtualPublico && cacheVestuarioEventos.some(e => e.id === vestuarioAtualPublico)){
+    carregarVestuarioPublico(vestuarioAtualPublico);
+  }
+}
+
+async function carregarInscricaoPorPedal(id){
+  if(unsubscribeInscritos) unsubscribeInscritos();
+  if(unsubscribeInfoPedal) unsubscribeInfoPedal();
+  document.getElementById('listaInscritos').innerHTML = '';
+  document.getElementById('contadorInscritos').textContent = '0';
+  const info = document.getElementById('infoPedal');
+  atualizarBloqueioInscricaoPublica(null);
+
+  if(!id){
+    info.className = 'empty';
+    info.textContent = 'Escolha um pedal para visualizar as informações.';
+    return;
+  }
+
+  unsubscribeInfoPedal = db.collection('events').doc(id).onSnapshot(doc => {
+    const p = doc.data();
+    if(!p){
+      info.className = 'empty';
+      info.textContent = 'Pedal não encontrado.';
+      atualizarBloqueioInscricaoPublica(null);
+      return;
+    }
+    const encerrado = isPedalEncerrado(p);
+    info.className = 'event-box';
+    info.innerHTML = `<h3>${escapeHtml(p.nome || '')}</h3>
+      <div class="muted"><b>Data:</b> ${formatarData(p.data)} &nbsp; <b>Horário:</b> ${escapeHtml(p.horario || '')}</div>
+      <div style="margin-top:10px"><b>Ponto de encontro:</b> ${escapeHtml(p.encontro || '-')}</div>
+      <div style="margin-top:8px"><b>Cidade:</b> ${escapeHtml(p.cidade || '-')}</div>
+      <div style="margin-top:8px"><b>Nível:</b> ${escapeHtml(p.nivel || '-')}</div>
+      <div style="margin-top:8px"><b>Status:</b> ${textoStatusProduto(produto)}</div>
+      ${p.trajeto ? `<div style="margin-top:8px"><b>Trajeto:</b> <a class="link-accent" href="${escapeAttribute(p.trajeto)}" target="_blank">Abrir link</a></div>` : ''}
+      ${p.descricao ? `<div style="margin-top:12px">${escapeHtml(p.descricao).replace(/\n/g,'<br>')}</div>` : ''}`;
+    atualizarBloqueioInscricaoPublica(p);
+  });
+
+  unsubscribeInscritos = db.collection('events').doc(id).collection('inscritos').onSnapshot(snap => {
+    const registros = snap.docs.map(doc => doc.data()).sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
+    const lista = document.getElementById('listaInscritos');
+    lista.innerHTML = '';
+    registros.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(item.nome || '')}</td><td>${escapeHtml(item.nivel || '')}</td><td>${escapeHtml(item.categoria || '')}</td><td>${escapeHtml(item.cidade || '')}</td>`;
+      lista.appendChild(tr);
+    });
+    document.getElementById('contadorInscritos').textContent = String(registros.length);
+  });
+}
+
+async function inscreverCiclista(){
+  if(!validarOperacaoCliente('msgInscricao')) return;
+  const pedalId = document.getElementById('inscricaoPedalSelect').value;
+  const nome = document.getElementById('nomeCiclista').value.trim();
+  const nivel = document.getElementById('nivelCiclista').value;
+  const whats = document.getElementById('whatsCiclista').value.trim();
+  const cidade = document.getElementById('cidadeCiclista').value.trim();
+  const categoria = document.getElementById('categoriaCiclista').value;
+
+  if(!pedalId) return mostrarMensagem('msgInscricao', 'Selecione o pedal.', true);
+  if(!nome) return mostrarMensagem('msgInscricao', 'Informe o nome do ciclista.', true);
+
+  let pedal = cachePedais.find(p => p.id === pedalId);
+  if(!pedal){
+    const pedalDoc = await db.collection('events').doc(pedalId).get();
+    pedal = pedalDoc.exists ? { id:pedalDoc.id, ...pedalDoc.data() } : null;
+  }
+  if(!pedal) return mostrarMensagem('msgInscricao', 'Evento não encontrado.', true);
+  if(isPedalEncerrado(pedal)) return mostrarMensagem('msgInscricao', 'Este evento já foi encerrado.', true);
+
+  const nomeKey = slugify(nome);
+  const ref = db.collection('events').doc(pedalId).collection('inscritos').doc(nomeKey);
+  const doc = await ref.get();
+  if(doc.exists) return mostrarMensagem('msgInscricao', 'Este nome já está inscrito neste pedal.', true);
+
+  await ref.set({ nome, nomeKey, nivel, whats, cidade, categoria, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  document.getElementById('nomeCiclista').value = '';
+  document.getElementById('nivelCiclista').value = 'Iniciante';
+  document.getElementById('whatsCiclista').value = '';
+  document.getElementById('cidadeCiclista').value = '';
+  document.getElementById('categoriaCiclista').value = 'Cicloturismo';
+  mostrarMensagem('msgInscricao', 'Inscrição confirmada com sucesso.');
+}
+
+async function carregarVestuarioPublico(id){
+  if(unsubscribeVestuarioInfo) unsubscribeVestuarioInfo();
+  if(unsubscribeVestuarioPublico) unsubscribeVestuarioPublico();
+  document.getElementById('listaVestuarioPublico').innerHTML = '';
+  document.getElementById('contadorVestuarioEscolhas').textContent = '0';
+  const info = document.getElementById('infoVestuarioEvento');
+  atualizarBloqueioPedidoPublico(null);
+
+  if(!id){
+    info.className = 'empty';
+    info.textContent = 'Escolha um produto para visualizar as informações.';
+    document.getElementById('anexosVestuarioPublico').innerHTML = '';
+    return;
+  }
+
+  unsubscribeVestuarioInfo = db.collection('vestuario_events').doc(id).onSnapshot(doc => {
+    const produto = doc.data();
+    if(!produto){
+      info.className = 'empty';
+      info.textContent = 'Produto não encontrado.';
+      document.getElementById('anexosVestuarioPublico').innerHTML = '';
+      atualizarBloqueioPedidoPublico(null);
+      return;
+    }
+    const encerrado = isProdutoEncerrado(produto);
+    info.className = 'event-box';
+    info.innerHTML = `<h3>${escapeHtml(produto.nome || '')}</h3>
+      <div class="muted"><b>Data limite:</b> ${formatarData(produto.dataLimite)}</div>
+      <div style="margin-top:8px"><b>Status:</b> ${textoStatusProduto(produto)}</div>
+      ${produto.observacao ? `<div style="margin-top:10px"><b>Observação:</b> ${escapeHtml(produto.observacao)}</div>` : ''}
+      ${produto.descricao ? `<div style="margin-top:12px">${escapeHtml(produto.descricao).replace(/\n/g,'<br>')}</div>` : ''}`;
+    document.getElementById('anexosVestuarioPublico').innerHTML = gerarHtmlAnexos(produto.anexos);
+    atualizarBloqueioPedidoPublico(produto);
+  });
+
+  unsubscribeVestuarioPublico = db.collection('vestuario_events').doc(id).collection('escolhas').onSnapshot(snap => {
+    const produto = cacheVestuarioEventos.find(e => e.id === id);
+    cacheVestuarioEscolhasPublico = snap.docs.map(doc => ({ id:doc.id, ...doc.data() })).sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
+    const tbody = document.getElementById('listaVestuarioPublico');
+    tbody.innerHTML = '';
+    cacheVestuarioEscolhasPublico.forEach(item => {
+      const nomeProduto = item.produtoNome || produto?.nome || '';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${escapeHtml(item.nome || '')}</td><td>${escapeHtml(nomeProduto)}</td><td>${escapeHtml(item.tamanho || '')}</td><td>${escapeHtml(String(item.qtd || 1))}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('contadorVestuarioEscolhas').textContent = String(cacheVestuarioEscolhasPublico.length);
+  });
+}
+
+async function salvarEscolhaVestuarioPublica(){
+  if(!validarOperacaoCliente('msgVestuarioPublico')) return;
+  const eventoId = document.getElementById('vestuarioEventoSelect').value;
+  let produto = cacheVestuarioEventos.find(e => e.id === eventoId);
+  const nome = document.getElementById('vestuarioNomePublico').value.trim();
+  const tamanho = document.getElementById('vestuarioTamanhoPublico').value;
+  const qtd = Math.max(1, Number(document.getElementById('vestuarioQtdPublico').value || 1));
+  const whats = document.getElementById('vestuarioWhatsPublico').value.trim();
+  const observacao = document.getElementById('vestuarioObsPublico').value.trim();
+
+  if(!eventoId) return mostrarMensagem('msgVestuarioPublico', 'Selecione o produto.', true);
+  if(!nome) return mostrarMensagem('msgVestuarioPublico', 'Informe seu nome.', true);
+  if(!produto){
+    const produtoDoc = await db.collection('vestuario_events').doc(eventoId).get();
+    produto = produtoDoc.exists ? { id:produtoDoc.id, ...produtoDoc.data() } : null;
+  }
+  if(!produto) return mostrarMensagem('msgVestuarioPublico', 'Produto não encontrado.', true);
+  if(isProdutoEncerrado(produto)) return mostrarMensagem('msgVestuarioPublico', 'Este pedido já foi encerrado.', true);
+
+  await db.collection('vestuario_events').doc(eventoId).collection('escolhas').add({
+    nome,
+    produtoId: eventoId,
+    produtoNome: produto?.nome || '',
+    tamanho,
+    qtd,
+    whats,
+    observacao,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  document.getElementById('vestuarioNomePublico').value = '';
+  document.getElementById('vestuarioTamanhoPublico').value = 'P';
+  document.getElementById('vestuarioQtdPublico').value = 1;
+  document.getElementById('vestuarioWhatsPublico').value = '';
+  document.getElementById('vestuarioObsPublico').value = '';
+  mostrarMensagem('msgVestuarioPublico', 'Pedido enviado com sucesso.');
+}
+
+function configurarAcoesAdmin(){
+  const tabelaPedais = document.getElementById('listaPedais');
+  const tabelaInscritos = document.getElementById('listaInscritosAdmin');
+  const tabelaProdutos = document.getElementById('listaVestuarioEventos');
+  const tabelaPedidos = document.getElementById('listaVestuarioEscolhasAdmin');
+  const tabelaHistoricoPedais = document.getElementById('listaHistoricoPedais');
+  const tabelaHistoricoProdutos = document.getElementById('listaHistoricoProdutos');
+
+  if(tabelaPedais && !tabelaPedais.dataset.bound){
+    tabelaPedais.dataset.bound = '1';
+    tabelaPedais.addEventListener('click', (event) => {
+      const btnToggle = event.target.closest('.js-pedal-toggle');
+      const btnEditar = event.target.closest('.js-pedal-editar');
+      const btnExcluir = event.target.closest('.js-pedal-excluir');
+      if(btnEditar){
+        const id = btnEditar.dataset.pedalId || '';
+        if(id) editarPedalPorId(id);
+        return;
+      }
+      if(btnExcluir){
+        const id = btnExcluir.dataset.pedalId || '';
+        if(id) excluirPedalPorId(id);
+      }
+    });
+  }
+
+  if(tabelaInscritos && !tabelaInscritos.dataset.bound){
+    tabelaInscritos.dataset.bound = '1';
+    tabelaInscritos.addEventListener('click', (event) => {
+      const btnEditar = event.target.closest('.js-inscrito-editar');
+      const btnExcluir = event.target.closest('.js-inscrito-excluir');
+      if(btnEditar){
+        const id = btnEditar.dataset.inscritoId || '';
+        if(id) editarInscritoAdmin(id);
+        return;
+      }
+      if(btnExcluir){
+        const id = btnExcluir.dataset.inscritoId || '';
+        if(id) excluirInscritoAdmin(id);
+      }
+    });
+  }
+
+  if(tabelaProdutos && !tabelaProdutos.dataset.bound){
+    tabelaProdutos.dataset.bound = '1';
+    tabelaProdutos.addEventListener('click', (event) => {
+      const btnToggle = event.target.closest('.js-produto-toggle');
+      const btnEditar = event.target.closest('.js-produto-editar');
+      const btnExcluir = event.target.closest('.js-produto-excluir');
+      if(btnToggle){
+        const id = btnToggle.dataset.produtoId || '';
+        if(id) alternarStatusProdutoPorId(id);
+        return;
+      }
+      if(btnEditar){
+        const id = btnEditar.dataset.produtoId || '';
+        if(id) editarVestuarioEventoPorId(id);
+        return;
+      }
+      if(btnExcluir){
+        const id = btnExcluir.dataset.produtoId || '';
+        if(id) excluirVestuarioEventoPorId(id);
+      }
+    });
+  }
+
+  if(tabelaPedidos && !tabelaPedidos.dataset.bound){
+    tabelaPedidos.dataset.bound = '1';
+    tabelaPedidos.addEventListener('click', (event) => {
+      const btnEditar = event.target.closest('.js-pedido-editar');
+      const btnExcluir = event.target.closest('.js-pedido-excluir');
+      if(btnEditar){
+        const id = btnEditar.dataset.pedidoId || '';
+        if(id) editarVestuarioEscolha(id);
+        return;
+      }
+      if(btnExcluir){
+        const id = btnExcluir.dataset.pedidoId || '';
+        if(id) excluirVestuarioEscolha(id);
+      }
+    });
+  }
+
+  if(tabelaHistoricoPedais && !tabelaHistoricoPedais.dataset.bound){
+    tabelaHistoricoPedais.dataset.bound = '1';
+    tabelaHistoricoPedais.addEventListener('click', (event) => {
+      const btnReabrir = event.target.closest('.js-historico-pedal-reabrir');
+      const btnEditar = event.target.closest('.js-historico-pedal-editar');
+      const btnExcluir = event.target.closest('.js-historico-pedal-excluir');
+      if(btnReabrir){
+        const id = btnReabrir.dataset.pedalId || '';
+        if(id) reabrirPedalPorId(id);
+        return;
+      }
+      if(btnEditar){
+        const id = btnEditar.dataset.pedalId || '';
+        if(id) editarPedalPorId(id);
+        return;
+      }
+      if(btnExcluir){
+        const id = btnExcluir.dataset.pedalId || '';
+        if(id) excluirPedalPorId(id);
+      }
+    });
+  }
+
+  if(tabelaHistoricoProdutos && !tabelaHistoricoProdutos.dataset.bound){
+    tabelaHistoricoProdutos.dataset.bound = '1';
+    tabelaHistoricoProdutos.addEventListener('click', (event) => {
+      const btnReabrir = event.target.closest('.js-historico-produto-reabrir');
+      const btnEditar = event.target.closest('.js-historico-produto-editar');
+      const btnExcluir = event.target.closest('.js-historico-produto-excluir');
+      if(btnReabrir){
+        const id = btnReabrir.dataset.produtoId || '';
+        if(id) reabrirProdutoPorId(id);
+        return;
+      }
+      if(btnEditar){
+        const id = btnEditar.dataset.produtoId || '';
+        if(id) editarVestuarioEventoPorId(id);
+        return;
+      }
+      if(btnExcluir){
+        const id = btnExcluir.dataset.produtoId || '';
+        if(id) excluirVestuarioEventoPorId(id);
+      }
+    });
+  }
+}
+
+
+
+async function alternarStatusPedalPorId(id){
+  if(!validarAdmin()) return mostrarMensagem('msgAdmin', 'Senha do admin incorreta.', true);
+  const pedal = cachePedais.find(p => p.id === id);
+  if(!pedal) return mostrarMensagem('msgAdmin', 'Pedal não encontrado.', true);
+  const fechando = !isPedalEncerrado(pedal);
+  await db.collection('events').doc(id).set({
+    statusManual: fechando ? 'fechado' : 'reaberto',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge:true });
+  pedalAtualCodigo = id;
+  await carregarPedais();
+  carregarInscritosAdmin(id);
+  document.getElementById('pedalExistente').value = id;
+  document.getElementById('linkPedal').textContent = gerarLinkPedal(id);
+  mostrarMensagem('msgAdmin', fechando ? 'Pedal fechado com sucesso. Ele não aparecerá para novas inscrições.' : 'Pedal aberto com sucesso. Ele voltou a aparecer para inscrições.');
+}
+
+async function alternarStatusProdutoPorId(id){
+  if(!validarAdmin()) return mostrarMensagem('msgVestuarioAdmin', 'Senha do admin incorreta.', true);
+  const produto = cacheVestuarioEventos.find(p => p.id === id);
+  if(!produto) return mostrarMensagem('msgVestuarioAdmin', 'Produto não encontrado.', true);
+  const fechando = !isProdutoEncerrado(produto);
+  await db.collection('vestuario_events').doc(id).set({
+    statusManual: fechando ? 'fechado' : 'reaberto',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge:true });
+  vestuarioAtualCodigo = id;
+  await carregarVestuarioEventos();
+  carregarVestuarioEscolhasAdmin(id);
+  document.getElementById('vestuarioEventoExistente').value = id;
+  document.getElementById('linkVestuario').textContent = gerarLinkVestuario(id);
+  mostrarMensagem('msgVestuarioAdmin', fechando ? 'Produto fechado com sucesso. Ele não aparecerá para novos pedidos.' : 'Produto aberto com sucesso. Ele voltou a aparecer para pedidos.');
+}
+
+
+async function reabrirPedalPorId(id){
+  if(!validarAdmin()) return mostrarMensagem('msgAdmin', 'Senha do admin incorreta.', true);
+  const pedal = cachePedais.find(p => p.id === id);
+  if(!pedal) return mostrarMensagem('msgAdmin', 'Pedal não encontrado.', true);
+  await db.collection('events').doc(id).set({
+    statusManual:'reaberto',
+    reabertoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge:true });
+  pedalAtualCodigo = id;
+  await carregarPedais();
+  carregarInscritosAdmin(id);
+  abrirAba('admin');
+  abrirSubAbaAdmin('pedal');
+  document.getElementById('pedalExistente').value = id;
+  document.getElementById('linkPedal').textContent = gerarLinkPedal(id);
+  mostrarMensagem('msgAdmin', 'Pedal reaberto com sucesso. Ajuste a data e o horário se quiser atualizar o prazo.');
+}
+
+async function reabrirProdutoPorId(id){
+  if(!validarAdmin()) return mostrarMensagem('msgVestuarioAdmin', 'Senha do admin incorreta.', true);
+  const produto = cacheVestuarioEventos.find(p => p.id === id);
+  if(!produto) return mostrarMensagem('msgVestuarioAdmin', 'Produto não encontrado.', true);
+  await db.collection('vestuario_events').doc(id).set({
+    statusManual:'reaberto',
+    reabertoEm: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge:true });
+  vestuarioAtualCodigo = id;
+  await carregarVestuarioEventos();
+  carregarVestuarioEscolhasAdmin(id);
+  abrirAba('admin');
+  abrirSubAbaAdmin('roupas');
+  document.getElementById('vestuarioEventoExistente').value = id;
+  document.getElementById('linkVestuario').textContent = gerarLinkVestuario(id);
+  mostrarMensagem('msgVestuarioAdmin', 'Produto reaberto com sucesso. Ajuste a data limite se quiser atualizar o prazo.');
+}
+
+function editarPedalPorId(id){
+  pedalAtualCodigo = id;
+  const select = document.getElementById('pedalExistente');
+  const pedal = cachePedais.find(p => p.id === id);
+  if(select && pedal && !Array.from(select.options).some(opt => opt.value === id)) {
+    const option = document.createElement('option');
+    option.value = pedal.id;
+    option.textContent = montarOpcaoHistorico(`${pedal.nome || pedal.id} - ${formatarData(pedal.data)}`);
+    select.appendChild(option);
+  }
+  if(select) select.value = id;
+  carregarPedalParaEdicao(id);
+  abrirAba('admin');
+  abrirSubAbaAdmin('pedal');
+}
+
+async function carregarPedalParaEdicao(idForcado=''){
+  const id = idForcado || document.getElementById('pedalExistente').value || pedalAtualCodigo;
+  if(!id) return limparFormularioPedal();
+  const doc = await db.collection('events').doc(id).get();
+  if(!doc.exists) return;
+  const p = doc.data();
+  pedalAtualCodigo = id;
+  document.getElementById('nomePedal').value = p.nome || '';
+  document.getElementById('dataPedal').value = p.data || '';
+  document.getElementById('horarioPedal').value = p.horario || '';
+  document.getElementById('encontroPedal').value = p.encontro || '';
+  document.getElementById('cidadePedal').value = p.cidade || '';
+  document.getElementById('trajetoPedal').value = p.trajeto || '';
+  document.getElementById('nivelPedal').value = p.nivel || 'Leve';
+  document.getElementById('descricaoPedal').value = p.descricao || '';
+  document.getElementById('linkPedal').textContent = gerarLinkPedal(id);
+  carregarInscritosAdmin(id);
+  mostrarMensagem('msgAdmin', isPedalEncerrado(p) ? 'Pedal carregado do histórico para edição.' : 'Pedal carregado para edição.');
+}
+
+function editarVestuarioEventoPorId(id){
+  vestuarioAtualCodigo = id;
+  const select = document.getElementById('vestuarioEventoExistente');
+  const produto = cacheVestuarioEventos.find(e => e.id === id);
+  if(select && produto && !Array.from(select.options).some(opt => opt.value === id)) {
+    const option = document.createElement('option');
+    option.value = produto.id;
+    option.textContent = montarOpcaoHistorico(`${produto.nome || produto.id}${produto.dataLimite ? ' - ' + formatarData(produto.dataLimite) : ''}`);
+    select.appendChild(option);
+  }
+  if(select) select.value = id;
+  carregarVestuarioEventoParaEdicao(id);
+  abrirAba('admin');
+  abrirSubAbaAdmin('roupas');
+}
+
+async function carregarVestuarioEventoParaEdicao(idForcado=''){
+  const id = idForcado || document.getElementById('vestuarioEventoExistente').value || vestuarioAtualCodigo;
+  if(!id) return limparFormularioVestuarioEvento();
+  const doc = await db.collection('vestuario_events').doc(id).get();
+  if(!doc.exists) return;
+  const produto = doc.data();
+  vestuarioAtualCodigo = id;
+  document.getElementById('vestuarioProdutoBase').value = produto.produtoBase || '';
+  document.getElementById('vestuarioEventoNome').value = produto.nome || '';
+  document.getElementById('vestuarioNomePreview').value = produto.nome || '';
+  document.getElementById('vestuarioEventoData').value = produto.dataLimite || '';
+  document.getElementById('vestuarioEventoObs').value = produto.observacao || '';
+  document.getElementById('vestuarioEventoDescricao').value = produto.descricao || '';
+  produtoArquivosPendentes = Array.isArray(produto.anexos) ? produto.anexos : [];
+  renderizarListaArquivosProduto();
+  document.getElementById('linkVestuario').textContent = gerarLinkVestuario(id);
+  carregarVestuarioEscolhasAdmin(id);
+  mostrarMensagem('msgVestuarioAdmin', isProdutoEncerrado(produto) ? 'Produto carregado do histórico para edição.' : 'Produto carregado para edição.');
+}
+
+
+APP_CONFIG.accessMode = APP_CONFIG.accessMode || 'hybrid';
+APP_CONFIG.adminEmail = APP_CONFIG.adminEmail || '';
+APP_CONFIG.developerEmail = APP_CONFIG.developerEmail || '';
+APP_CONFIG.useStorageUploads = APP_CONFIG.useStorageUploads !== false;
+APP_CONFIG.whatsAppNumber = APP_CONFIG.whatsAppNumber || '';
+APP_CONFIG.brandTitle = APP_CONFIG.brandTitle || DEFAULT_BRAND.title;
+APP_CONFIG.brandSubtitle = APP_CONFIG.brandSubtitle || DEFAULT_BRAND.subtitle;
+
+const authServiceV2 = firebase.auth ? firebase.auth() : null;
+const storageServiceV2 = firebase.storage ? firebase.storage() : null;
+let authObserverRegistradoV2 = false;
+let currentAuthEmailV2 = '';
+
+function accessModeLabelV2(){
+  if(APP_CONFIG.accessMode === 'firebase_auth') return 'Firebase Auth obrigatório';
+  if(APP_CONFIG.accessMode === 'legacy_password') return 'Senha simples local';
+  return 'Modo híbrido ativo';
+}
+
+function authDisponivelV2(){
+  return !!authServiceV2;
+}
+
+function storageDisponivelV2(){
+  return !!storageServiceV2 && APP_CONFIG.useStorageUploads !== false;
+}
+
+function emailAdminConfiguradoV2(){
+  return String(document.getElementById('adminEmail')?.value || clienteContexto?.adminEmail || APP_CONFIG.adminEmail || '').trim().toLowerCase();
+}
+
+function emailDevConfiguradoV2(){
+  return String(document.getElementById('devEmail')?.value || APP_CONFIG.developerEmail || '').trim().toLowerCase();
+}
+
+function credenciaisLegacyPermitidasV2(){
+  return ['legacy_password', 'hybrid'].includes(APP_CONFIG.accessMode || 'hybrid');
+}
+
+function requiresFirebaseAuthV2(){
+  return (APP_CONFIG.accessMode || 'hybrid') === 'firebase_auth';
+}
+
+function sincronizarAcessoFirebaseV2(){
+  if(!authServiceV2 || !authServiceV2.currentUser){
+    currentAuthEmailV2 = '';
+    if(requiresFirebaseAuthV2()){
+      isAdminLoggedIn = false;
+      isDevLoggedIn = false;
+    }
+    atualizarEstadoAcesso();
+    return;
+  }
+
+  currentAuthEmailV2 = String(authServiceV2.currentUser.email || '').trim().toLowerCase();
+  const adminEmail = emailAdminConfiguradoV2();
+  const devEmail = emailDevConfiguradoV2();
+  const isDevByEmail = !!(devEmail && currentAuthEmailV2 === devEmail);
+  const isAdminByEmail = !!(adminEmail && currentAuthEmailV2 === adminEmail);
+
+  isDevLoggedIn = isDevByEmail;
+  isAdminLoggedIn = isDevByEmail || isAdminByEmail;
+  salvarSessaoAcesso();
+  atualizarEstadoAcesso();
+}
+
+async function inicializarCamadaAcessoV2(){
+  if(!authDisponivelV2() || authObserverRegistradoV2) return;
+  try{
+    await authServiceV2.setPersistence(APP_CONFIG.persistAccess ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION);
+  }catch(error){}
+
+  authServiceV2.onAuthStateChanged((user) => {
+    if(user){
+      sincronizarAcessoFirebaseV2();
+      return;
+    }
+    currentAuthEmailV2 = '';
+    if(requiresFirebaseAuthV2()){
+      isAdminLoggedIn = false;
+      isDevLoggedIn = false;
+      limparSessaoAcesso('admin');
+      limparSessaoAcesso('dev');
+    } else {
+      restaurarSessaoAcesso();
+    }
+    atualizarEstadoAcesso();
+  });
+  authObserverRegistradoV2 = true;
+}
+
+const aplicarClienteContextoOriginalV2 = aplicarClienteContexto;
+aplicarClienteContexto = function(cliente){
+  aplicarClienteContextoOriginalV2(cliente);
+  const campoAdminEmailCliente = document.getElementById('clienteAdminEmail');
+  if(campoAdminEmailCliente && cliente && campoAdminEmailCliente !== document.activeElement){
+    campoAdminEmailCliente.value = cliente.adminEmail || '';
+  }
+  const adminEmailField = document.getElementById('adminEmail');
+  if(adminEmailField && !adminEmailField.value && cliente?.adminEmail){
+    adminEmailField.placeholder = cliente.adminEmail;
+  }
+  sincronizarAcessoFirebaseV2();
+};
+
+atualizarEstadoAcesso = function(){
+  const adminArea = document.getElementById('adminLockedArea');
+  const devArea = document.getElementById('devLockedArea');
+  const adminBtn = document.getElementById('adminLoginBtn');
+  const devBtn = document.getElementById('devLoginBtn');
+  const adminStatus = document.getElementById('adminStatus');
+  const devStatus = document.getElementById('devStatus');
+  const modo = accessModeLabelV2();
+
+  if(adminArea) adminArea.classList.toggle('locked-panel', !isAdminLoggedIn);
+  if(devArea){
+    devArea.classList.toggle('dev-darkened', !isDevLoggedIn);
+    devArea.classList.toggle('locked-panel', false);
+  }
+
+  if(adminBtn) adminBtn.textContent = isAdminLoggedIn ? 'Sair' : 'Logar';
+  if(devBtn) devBtn.textContent = isDevLoggedIn ? 'Sair' : 'Logar';
+
+  if(adminStatus){
+    adminStatus.textContent = isAdminLoggedIn ? `Admin liberado${currentAuthEmailV2 ? ' • ' + currentAuthEmailV2 : ''}` : modo;
+    adminStatus.classList.toggle('ok', isAdminLoggedIn);
+  }
+  if(devStatus){
+    devStatus.textContent = isDevLoggedIn ? `Desenvolvedor liberado${currentAuthEmailV2 ? ' • ' + currentAuthEmailV2 : ''}` : modo;
+    devStatus.classList.toggle('ok', isDevLoggedIn);
+  }
+
+  const indicadorModo = document.getElementById('metricModoAcesso');
+  if(indicadorModo){
+    const storageTxt = storageDisponivelV2() ? 'Storage pronto' : 'Storage em fallback local';
+    indicadorModo.textContent = `${modo}. ${storageTxt}.`;
+  }
+};
+
+salvarSessaoAcesso = function(){
+  if(!APP_CONFIG.persistAccess) return;
+  try {
+    localStorage.setItem(SESSION_KEY_ADMIN, isAdminLoggedIn ? '1' : '0');
+    localStorage.setItem(SESSION_KEY_DEV, isDevLoggedIn ? '1' : '0');
+  } catch (error) {}
+};
+
+restaurarSessaoAcesso = function(){
+  if(requiresFirebaseAuthV2()){
+    isAdminLoggedIn = false;
+    isDevLoggedIn = false;
+    return;
+  }
+  if(!APP_CONFIG.persistAccess) return;
+  try {
+    isAdminLoggedIn = localStorage.getItem(SESSION_KEY_ADMIN) === '1';
+    isDevLoggedIn = localStorage.getItem(SESSION_KEY_DEV) === '1';
+  } catch (error) {
+    isAdminLoggedIn = false;
+    isDevLoggedIn = false;
+  }
+};
+
+validarAdmin = function(){
+  if(isAdminLoggedIn) return true;
+  const senha = document.getElementById('adminSenha')?.value || '';
+  return credenciaisLegacyPermitidasV2() && senha === (APP_CONFIG.adminPassword || '');
+};
+
+validarDesenvolvedor = function(){
+  if(isDevLoggedIn) return true;
+  const senha = document.getElementById('devSenha')?.value || '';
+  return credenciaisLegacyPermitidasV2() && senha === (APP_CONFIG.developerPassword || '');
+};
+
+function emailResetClienteSelecionadoV41(origem='dev'){
+  if(origem === 'admin') return emailAdminConfiguradoV2();
+  return String(document.getElementById('clienteAdminEmail')?.value || clienteContexto?.adminEmail || '').trim().toLowerCase();
+}
+
+async function enviarRedefinicaoSenhaAdminCliente(origem='dev'){
+  const msgId = origem === 'admin' ? 'msgAdmin' : 'msgDev';
+  if(!authDisponivelV2()){
+    return mostrarMensagem(msgId, 'Firebase Auth não está disponível nesta publicação.', true);
+  }
+  const email = emailResetClienteSelecionadoV41(origem);
+  if(!email){
+    return mostrarMensagem(msgId, origem === 'admin' ? 'Informe o e-mail do admin para redefinir a senha.' : 'Informe o e-mail do admin do cliente para enviar a redefinição de senha.', true);
+  }
+  try{
+    await authServiceV2.sendPasswordResetEmail(email);
+    const texto = origem === 'admin'
+      ? `E-mail de redefinição enviado para ${email}. Abra sua caixa de entrada e escolha uma nova senha.`
+      : `Redefinição de senha enviada para ${email}. O cliente pode criar uma nova senha pelo e-mail recebido.`;
+    mostrarMensagem(msgId, texto);
+  }catch(error){
+    let texto = error?.message || 'Não foi possível enviar a redefinição de senha.';
+    if(error?.code === 'auth/user-not-found'){
+      texto = 'Esse e-mail ainda não existe no Firebase Auth. Salve o cliente novamente para sincronizar o usuário.';
+    }else if(error?.code === 'auth/invalid-email'){
+      texto = 'E-mail inválido para redefinição de senha.';
+    }else if(error?.code === 'auth/too-many-requests'){
+      texto = 'Muitas tentativas seguidas. Aguarde um pouco e tente novamente.';
+    }
+    mostrarMensagem(msgId, texto || traduzirErroAuth(error), true);
+  }
+}
+
+async function autenticarFirebasePorPapelV2(role){
+  if(!authDisponivelV2()) throw new Error('Firebase Auth não está disponível nesta publicação.');
+  const email = role === 'dev' ? emailDevConfiguradoV2() : emailAdminConfiguradoV2();
+  const senha = document.getElementById(role === 'dev' ? 'devSenha' : 'adminSenha')?.value || '';
+  if(!email) throw new Error(`Informe o e-mail do ${role === 'dev' ? 'desenvolvedor' : 'admin'}.`);
+  if(!senha) throw new Error(`Informe a senha do ${role === 'dev' ? 'desenvolvedor' : 'admin'}.`);
+  await authServiceV2.signInWithEmailAndPassword(email, senha);
+  sincronizarAcessoFirebaseV2();
+  if(role === 'dev' && !isDevLoggedIn){
+    await authServiceV2.signOut();
+    throw new Error('Usuário autenticado, mas sem permissão de desenvolvedor.');
+  }
+  if(role === 'admin' && !isAdminLoggedIn){
+    await authServiceV2.signOut();
+    throw new Error('Usuário autenticado, mas sem permissão de admin para este cliente.');
+  }
+}
+
+logarAdmin = async function(){
+  const senha = document.getElementById('adminSenha')?.value || '';
+  const email = emailAdminConfiguradoV2();
+
+  if(requiresFirebaseAuthV2() || (authDisponivelV2() && APP_CONFIG.accessMode === 'hybrid' && email)){
+    try{
+      await autenticarFirebasePorPapelV2('admin');
+      mostrarMensagem('msgAdmin', 'Login do admin realizado com sucesso.');
+      return;
+    }catch(error){
+      isAdminLoggedIn = false;
+      atualizarEstadoAcesso();
+      return mostrarMensagem('msgAdmin', traduzirErroAuth(error), true);
+    }
+  }
+
+  if(!credenciaisLegacyPermitidasV2() || senha !== (APP_CONFIG.adminPassword || '')){
+    isAdminLoggedIn = false;
+    limparSessaoAcesso('admin');
+    atualizarEstadoAcesso();
+    return mostrarMensagem('msgAdmin', 'Senha do admin incorreta.', true);
+  }
+  isAdminLoggedIn = true;
+  salvarSessaoAcesso();
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgAdmin', 'Login do admin realizado com sucesso.');
+};
+
+deslogarAdmin = async function(){
+  const campoSenha = document.getElementById('adminSenha');
+  if(campoSenha) campoSenha.value = '';
+  if(authDisponivelV2() && authServiceV2.currentUser){
+    await authServiceV2.signOut();
+  }
+  isAdminLoggedIn = false;
+  limparSessaoAcesso('admin');
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgAdmin', 'Admin deslogado com sucesso.');
+};
+
+toggleAdminAcesso = async function(){
+  if(isAdminLoggedIn) return deslogarAdmin();
+  return logarAdmin();
+};
+
+logarDev = async function(){
+  const senha = document.getElementById('devSenha')?.value || '';
+  const email = emailDevConfiguradoV2();
+
+  if(requiresFirebaseAuthV2() || (authDisponivelV2() && APP_CONFIG.accessMode === 'hybrid' && email)){
+    try{
+      await autenticarFirebasePorPapelV2('dev');
+      mostrarMensagem('msgDev', 'Login do desenvolvedor realizado com sucesso.');
+      return;
+    }catch(error){
+      isDevLoggedIn = false;
+      atualizarEstadoAcesso();
+      return mostrarMensagem('msgDev', traduzirErroAuth(error), true);
+    }
+  }
+
+  if(!credenciaisLegacyPermitidasV2() || senha !== (APP_CONFIG.developerPassword || '')){
+    isDevLoggedIn = false;
+    limparSessaoAcesso('dev');
+    atualizarEstadoAcesso();
+    return mostrarMensagem('msgDev', 'Senha do desenvolvedor incorreta.', true);
+  }
+  isDevLoggedIn = true;
+  isAdminLoggedIn = true;
+  salvarSessaoAcesso();
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgDev', 'Login do desenvolvedor realizado com sucesso.');
+};
+
+deslogarDev = async function(){
+  const campoSenha = document.getElementById('devSenha');
+  if(campoSenha) campoSenha.value = '';
+  if(authDisponivelV2() && authServiceV2.currentUser){
+    await authServiceV2.signOut();
+  }
+  isDevLoggedIn = false;
+  limparSessaoAcesso('dev');
+  atualizarEstadoAcesso();
+  mostrarMensagem('msgDev', 'Desenvolvedor deslogado com sucesso.');
+};
+
+toggleDevAcesso = async function(){
+  if(isDevLoggedIn) return deslogarDev();
+  return logarDev();
+};
+
+function urlVisualAnexoV2(arquivo){
+  return arquivo?.previewUrl || arquivo?.url || arquivo?.dataUrl || '';
+}
+
+function normalizarAnexoPersistidoV2(arquivo){
+  if(!arquivo || typeof arquivo !== 'object') return null;
+  const visual = urlVisualAnexoV2(arquivo);
+  return {
+    nome: arquivo.nome || 'arquivo.jpg',
+    tipo: arquivo.tipo || 'image/jpeg',
+    bytes: arquivo.bytes || 0,
+    dataUrl: arquivo.dataUrl || '',
+    url: arquivo.url || visual,
+    previewUrl: visual,
+    path: arquivo.path || '',
+    origem: arquivo.origem || (arquivo.path ? 'firebase-storage' : 'inline')
+  };
+}
+
+renderizarListaArquivosProduto = function(){
+  const box = document.getElementById('listaArquivosProduto');
+  if(!box) return;
+  if(!produtoArquivosPendentes.length){
+    box.innerHTML = '<div class="empty">Nenhum arquivo anexado.</div>';
+    return;
+  }
+  box.innerHTML = produtoArquivosPendentes.map((arquivo, idx) => {
+    const visual = urlVisualAnexoV2(arquivo);
+    const nome = arquivo?.nome || `arquivo-${idx+1}.jpg`;
+    const tamanho = Math.max(1, Math.round((arquivo?.bytes || 0) / 1024));
+    const botao = visual ? `<a class="btn ghost mini" href="${visual}" target="_blank" rel="noopener">Abrir</a>` : '';
+    return `
+      <div class="attachment-item">
+        <div class="attachment-meta">
+          ${visual ? `<img src="${visual}" alt="${escapeAttribute(nome)}" />` : '<div class="pill">Sem preview</div>'}
+          <div>
+            <div class="attachment-name">${escapeHtml(nome)}</div>
+            <div class="small muted">${tamanho} KB • ${escapeHtml(arquivo?.origem || 'inline')}</div>
+          </div>
+        </div>
+        <div class="inline-actions">
+          ${botao}
+          <button class="btn danger mini" type="button" onclick="removerArquivoProduto(${idx})">Remover</button>
+        </div>
+      </div>`;
+  }).join('');
+};
+
+gerarHtmlAnexos = function(anexos){
+  if(!Array.isArray(anexos) || !anexos.length) return '';
+  return `<div class="thumb-grid">${anexos.map((arquivo, idx) => {
+    const visual = urlVisualAnexoV2(arquivo);
+    const nome = arquivo?.nome || `arquivo-${idx+1}.jpg`;
+    return `<div class="thumb-card">
+      ${visual ? `<img src="${visual}" alt="${escapeAttribute(nome)}" />` : '<div style="padding:16px" class="muted">Sem imagem</div>'}
+      ${visual ? `<a href="${visual}" target="_blank" rel="noopener">${escapeHtml(nome)}</a>` : `<a href="#">${escapeHtml(nome)}</a>`}
+    </div>`;
+  }).join('')}</div>`;
+};
+
+function anexosPendentesPrecisamUploadV2(){
+  return (produtoArquivosPendentes || []).some((arquivo) => {
+    const normalizado = normalizarAnexoPersistidoV2(arquivo);
+    return !!(normalizado && normalizado.dataUrl && !normalizado.path);
+  });
+}
+
+async function subirArquivoProdutoStorageV2(arquivo, codigoProduto){
+  const anexo = normalizarAnexoPersistidoV2(arquivo);
+  if(!anexo) return null;
+  if(anexo.path || (anexo.url && !anexo.dataUrl)){
+    return anexo;
+  }
+  if(!storageDisponivelV2()){
+    throw new Error('Firebase Storage indisponível para enviar anexos.');
+  }
+  if(!authServiceV2?.currentUser){
+    throw new Error('Faça login com e-mail e senha no Firebase Auth para enviar anexos.');
+  }
+  if(!anexo.dataUrl){
+    throw new Error('Anexo inválido para upload.');
+  }
+  const baseCliente = slugify(clienteContexto?.slug || clienteContexto?.id || 'cliente-global');
+  const produtoSlug = slugify(codigoProduto || vestuarioAtualCodigo || 'produto');
+  const nome = normalizarNomeArquivo(anexo.nome || `arquivo-${Date.now()}.jpg`);
+  const path = `clientes/${baseCliente}/produtos/${produtoSlug}/${Date.now()}-${nome}`;
+  const ref = storageServiceV2.ref(path);
+  await ref.putString(anexo.dataUrl, 'data_url');
+  const url = await ref.getDownloadURL();
+  return {
+    nome,
+    tipo: anexo.tipo || 'image/jpeg',
+    bytes: anexo.bytes || 0,
+    url,
+    previewUrl: url,
+    path,
+    origem: 'firebase-storage'
+  };
+}
+
+async function prepararAnexosParaPersistenciaV2(codigoProduto){
+  const saida = [];
+  for(const arquivo of (produtoArquivosPendentes || [])){
+    const normalizado = normalizarAnexoPersistidoV2(arquivo);
+    if(!normalizado) continue;
+    if(normalizado.path || (normalizado.url && !normalizado.dataUrl)){
+      saida.push(normalizado);
+      continue;
+    }
+    const enviado = await subirArquivoProdutoStorageV2(normalizado, codigoProduto);
+    if(!enviado || !enviado.path || !enviado.url){
+      throw new Error(`Falha ao enviar o anexo ${normalizado.nome || 'arquivo'}.`);
+    }
+    saida.push(enviado);
+  }
+  return saida.filter(Boolean);
+}
+
+selecionarArquivosProduto = async function(event){
+  const arquivos = Array.from(event.target.files || []);
+  if(!arquivos.length) return;
+  const limite = 5;
+  const disponiveis = limite - produtoArquivosPendentes.length;
+  if(disponiveis <= 0){
+    mostrarMensagem('msgVestuarioAdmin', 'Limite atingido: até 5 arquivos por produto.', true);
+    event.target.value = '';
+    return;
+  }
+  let anexados = 0;
+  for(const file of arquivos.slice(0, disponiveis)){
+    if(!(file.type || '').startsWith('image/')){
+      mostrarMensagem('msgVestuarioAdmin', 'Anexe apenas imagens para a grade de tamanhos.', true);
+      continue;
+    }
+    try{
+      const convertido = await lerArquivoImagem(file);
+      produtoArquivosPendentes.push(normalizarAnexoPersistidoV2({ ...convertido, origem:'inline' }));
+      anexados += 1;
+    }catch(err){
+      mostrarMensagem('msgVestuarioAdmin', 'Não foi possível processar uma das imagens.', true);
+    }
+  }
+  if(arquivos.length > disponiveis){
+    mostrarMensagem('msgVestuarioAdmin', `Foram anexados ${anexados} arquivo(s). Limite: até 5 por produto.`, false);
+  }else if(anexados){
+    mostrarMensagem('msgVestuarioAdmin', `${anexados} arquivo(s) anexado(s) com sucesso.`);
+  }
+  renderizarListaArquivosProduto();
+  event.target.value = '';
+};
+
+salvarVestuarioEvento = async function(){
+  if(!validarAdmin()) return mostrarMensagem('msgVestuarioAdmin', 'Credencial de admin incorreta.', true);
+  if(!validarOperacaoCliente('msgVestuarioAdmin')) return;
+  if(anexosPendentesPrecisamUploadV2()){
+    if(!storageDisponivelV2()){
+      return mostrarMensagem('msgVestuarioAdmin', 'Firebase Storage indisponível para enviar anexos.', true);
+    }
+    if(!authServiceV2?.currentUser){
+      return mostrarMensagem('msgVestuarioAdmin', 'Faça login com e-mail e senha no Firebase Auth para salvar anexos no Storage.', true);
+    }
+  }
+  const produtoBase = document.getElementById('vestuarioProdutoBase').value.trim();
+  const nome = obterNomeProdutoAdmin();
+  const dataLimite = document.getElementById('vestuarioEventoData').value;
+  const observacao = document.getElementById('vestuarioEventoObs').value.trim();
+  const descricao = document.getElementById('vestuarioEventoDescricao').value.trim();
+  if(!nome) return mostrarMensagem('msgVestuarioAdmin', 'Selecione um produto da lista ou escreva o nome do produto.', true);
+
+  const codigoSelecionado = document.getElementById('vestuarioEventoExistente').value || '';
+  const codigo = codigoSelecionado || vestuarioAtualCodigo || slugify(`${dataLimite || 'sem-data'}-${nome}`);
+  const ref = db.collection('vestuario_events').doc(codigo);
+  const snap = await ref.get();
+  const anexosPersistidos = await prepararAnexosParaPersistenciaV2(codigo);
+  const payload = {
+    nome,
+    produtoBase,
+    dataLimite,
+    observacao,
+    descricao,
+    anexos: anexosPersistidos,
+    codigo,
+    statusManual:(snap.exists ? ((snap.data() || {}).statusManual || 'normal') : 'normal'),
+    clienteSlug: clienteContexto?.slug || '',
+    clienteId: clienteContexto?.id || '',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(!snap.exists) payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  await ref.set(payload, { merge:true });
+
+  produtoArquivosPendentes = anexosPersistidos;
+  vestuarioAtualCodigo = codigo;
+  document.getElementById('vestuarioEventoExistente').value = codigo;
+  document.getElementById('vestuarioNomePreview').value = nome;
+  document.getElementById('linkVestuario').textContent = gerarLinkVestuario(codigo);
+  await carregarVestuarioEventos();
+  carregarVestuarioEscolhasAdmin(codigo);
+  renderizarListaArquivosProduto();
+  mostrarMensagem('msgVestuarioAdmin', (anexosPersistidos || []).some(anexo => anexo?.origem === 'firebase-storage') ? 'Produto salvo com anexos no Firebase Storage.' : 'Produto salvo com sucesso.');
+};
+
+carregarVestuarioEventoParaEdicao = async function(idForcado=''){
+  const id = idForcado || document.getElementById('vestuarioEventoExistente').value || vestuarioAtualCodigo;
+  if(!id) return limparFormularioVestuarioEvento();
+  const doc = await db.collection('vestuario_events').doc(id).get();
+  if(!doc.exists) return;
+  const produto = doc.data();
+  vestuarioAtualCodigo = id;
+  document.getElementById('vestuarioProdutoBase').value = produto.produtoBase || '';
+  document.getElementById('vestuarioEventoNome').value = produto.nome || '';
+  document.getElementById('vestuarioNomePreview').value = produto.nome || '';
+  document.getElementById('vestuarioEventoData').value = produto.dataLimite || '';
+  document.getElementById('vestuarioEventoObs').value = produto.observacao || '';
+  document.getElementById('vestuarioEventoDescricao').value = produto.descricao || '';
+  produtoArquivosPendentes = Array.isArray(produto.anexos) ? produto.anexos.map(normalizarAnexoPersistidoV2).filter(Boolean) : [];
+  renderizarListaArquivosProduto();
+  document.getElementById('linkVestuario').textContent = gerarLinkVestuario(id);
+  carregarVestuarioEscolhasAdmin(id);
+  mostrarMensagem('msgVestuarioAdmin', isProdutoEncerrado(produto) ? 'Produto carregado do histórico para edição.' : 'Produto carregado para edição.');
+};
+
+limparFormularioClienteDev = function(){
+  clienteAtualId = '';
+  document.getElementById('clienteExistente').value = '';
+  document.getElementById('clienteNome').value = '';
+  document.getElementById('clienteSistemaNome').value = '';
+  document.getElementById('clienteSlug').value = '';
+  document.getElementById('clientePlano').value = 'Demonstração';
+  document.getElementById('clienteStatus').value = 'Ativo';
+  document.getElementById('clienteValidade').value = '';
+  document.getElementById('clienteCor').value = DEFAULT_BRAND.accent;
+  document.getElementById('clienteResponsavel').value = '';
+  document.getElementById('clienteWhats').value = '';
+  document.getElementById('clienteCidade').value = '';
+  document.getElementById('clienteDominio').value = '';
+  const adminEmailClienteEl = document.getElementById('clienteAdminEmail');
+  if(adminEmailClienteEl) adminEmailClienteEl.value = '';
+  document.getElementById('clienteModCiclismo').checked = true;
+  document.getElementById('clienteModVestuario').checked = true;
+  document.getElementById('clienteModExportacao').checked = true;
+  document.getElementById('clienteModPersonalizacao').checked = true;
+  document.getElementById('clienteObs').value = '';
+  document.getElementById('linkClienteDev').textContent = 'Salve um cliente para gerar o link.';
+  mostrarMensagem('msgDev', '');
+};
+
+salvarClienteDev = async function(){
+  if(!validarDesenvolvedor()) return mostrarMensagem('msgDev', 'Credencial de desenvolvedor incorreta.', true);
+  const nome = document.getElementById('clienteNome').value.trim();
+  const sistemaNome = document.getElementById('clienteSistemaNome').value.trim();
+  const slugInformado = document.getElementById('clienteSlug').value.trim();
+  const slug = slugify(slugInformado || nome);
+  const plano = document.getElementById('clientePlano').value;
+  const status = document.getElementById('clienteStatus').value;
+  const validade = document.getElementById('clienteValidade').value;
+  const cor = document.getElementById('clienteCor').value || DEFAULT_BRAND.accent;
+  const responsavel = document.getElementById('clienteResponsavel').value.trim();
+  const whats = document.getElementById('clienteWhats').value.trim();
+  const cidade = document.getElementById('clienteCidade').value.trim();
+  const dominio = document.getElementById('clienteDominio').value.trim();
+  const adminEmail = String(document.getElementById('clienteAdminEmail')?.value || '').trim().toLowerCase();
+  const obs = document.getElementById('clienteObs').value.trim();
+  const modCiclismo = document.getElementById('clienteModCiclismo').checked;
+  const modVestuario = document.getElementById('clienteModVestuario').checked;
+  const modExportacao = document.getElementById('clienteModExportacao').checked;
+  const modPersonalizacao = document.getElementById('clienteModPersonalizacao').checked;
+  if(!nome) return mostrarMensagem('msgDev', 'Informe o nome do cliente.', true);
+  if(!slug) return mostrarMensagem('msgDev', 'Informe um slug válido.', true);
+
+  const conflito = await db.collection('developer_clients').where('slug', '==', slug).get();
+  const conflitoReal = conflito.docs.find(d => d.id !== clienteAtualId);
+  if(conflitoReal) return mostrarMensagem('msgDev', 'Este slug já está em uso.', true);
+
+  const id = clienteAtualId || slug;
+  const ref = db.collection('developer_clients').doc(id);
+  const snap = await ref.get();
+  const payload = {
+    nome, sistemaNome, slug, plano, status, validade, cor,
+    responsavel, whats, cidade, dominio, adminEmail, obs,
+    modCiclismo, modVestuario, modExportacao, modPersonalizacao,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if(!snap.exists) payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  await ref.set(payload, { merge:true });
+  clienteAtualId = id;
+  document.getElementById('clienteExistente').value = id;
+  document.getElementById('clienteSlug').value = slug;
+  document.getElementById('linkClienteDev').textContent = gerarLinkCliente(slug);
+  await carregarClientes();
+  mostrarMensagem('msgDev', adminEmail ? 'Cliente salvo. O acesso do admin será criado ou atualizado automaticamente no Firebase Auth após o deploy das Functions V4.' : 'Cliente salvo com sucesso.');
+};
+
+carregarClienteParaEdicao = async function(){
+  const id = document.getElementById('clienteExistente').value;
+  if(!id) return limparFormularioClienteDev();
+  const doc = await db.collection('developer_clients').doc(id).get();
+  if(!doc.exists) return;
+  const c = doc.data();
+  clienteAtualId = id;
+  document.getElementById('clienteNome').value = c.nome || '';
+  document.getElementById('clienteSistemaNome').value = c.sistemaNome || '';
+  document.getElementById('clienteSlug').value = c.slug || '';
+  document.getElementById('clientePlano').value = c.plano || 'Demonstração';
+  document.getElementById('clienteStatus').value = c.status || 'Ativo';
+  document.getElementById('clienteValidade').value = c.validade || '';
+  document.getElementById('clienteCor').value = c.cor || DEFAULT_BRAND.accent;
+  document.getElementById('clienteResponsavel').value = c.responsavel || '';
+  document.getElementById('clienteWhats').value = c.whats || '';
+  document.getElementById('clienteCidade').value = c.cidade || '';
+  document.getElementById('clienteDominio').value = c.dominio || '';
+  const adminEmailClienteEl = document.getElementById('clienteAdminEmail');
+  if(adminEmailClienteEl) adminEmailClienteEl.value = c.adminEmail || '';
+  document.getElementById('clienteModCiclismo').checked = c.modCiclismo !== false;
+  document.getElementById('clienteModVestuario').checked = c.modVestuario !== false;
+  document.getElementById('clienteModExportacao').checked = c.modExportacao !== false;
+  document.getElementById('clienteModPersonalizacao').checked = c.modPersonalizacao !== false;
+  document.getElementById('clienteObs').value = c.obs || '';
+  document.getElementById('linkClienteDev').textContent = gerarLinkCliente(c.slug || '');
+  mostrarMensagem('msgDev', 'Cliente carregado para edição.');
+};
+
+function atualizarMetricasOperacionaisV2(){
+  const pedaisTotal = cachePedais.length;
+  const pedaisAbertos = cachePedais.filter(item => !isPedalEncerrado(item)).length;
+  const produtosTotal = cacheVestuarioEventos.length;
+  const produtosAbertos = cacheVestuarioEventos.filter(item => !isProdutoEncerrado(item)).length;
+  const mapIds = {
+    metricPedaisTotal: pedaisTotal,
+    metricPedaisAbertos: pedaisAbertos,
+    metricProdutosTotal: produtosTotal,
+    metricProdutosAbertos: produtosAbertos
+  };
+  Object.entries(mapIds).forEach(([id,val]) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = String(val);
+  });
+}
+
+const carregarPedaisOriginalV2 = carregarPedais;
+carregarPedais = async function(...args){
+  const retorno = await carregarPedaisOriginalV2.apply(this, args);
+  atualizarMetricasOperacionaisV2();
+  return retorno;
+};
+
+const carregarVestuarioEventosOriginalV2 = carregarVestuarioEventos;
+carregarVestuarioEventos = async function(...args){
+  const retorno = await carregarVestuarioEventosOriginalV2.apply(this, args);
+  atualizarMetricasOperacionaisV2();
+  return retorno;
+};
+
+
+async function iniciar(){
+      const produtoBaseEl = document.getElementById('vestuarioProdutoBase');
+      const produtoNomeEl = document.getElementById('vestuarioEventoNome');
+      if(produtoBaseEl) produtoBaseEl.addEventListener('change', atualizarPreviewNomeProduto);
+      if(produtoNomeEl) produtoNomeEl.addEventListener('input', atualizarPreviewNomeProduto);
+      document.getElementById('adminEmail')?.addEventListener('input', sincronizarAcessoFirebaseV2);
+      document.getElementById('devEmail')?.addEventListener('input', sincronizarAcessoFirebaseV2);
+
+      await inicializarCamadaAcessoV2();
+      restaurarSessaoAcesso();
+      atualizarEstadoAcesso();
+      await aplicarClientePorSlug();
+      sincronizarAcessoFirebaseV2();
+      aplicarModoPublicoVisual();
+      configurarAcoesAdmin();
+      await carregarClientes();
+      await carregarPedais();
+      await carregarVestuarioEventos();
+      atualizarPreviewNomeProduto();
+      renderizarListaArquivosProduto();
+      atualizarMetricasOperacionaisV2();
+      abrirSubAbaAdmin('pedal');
+      abrirSubAbaDev('clientes');
+
+      if(modoPublico === 'inscricao'){
+        abrirAba('inscricao');
+        if(pedalAtualInscricao && cachePedais.some(p => p.id === pedalAtualInscricao) && (!clienteContexto || clienteContexto.modCiclismo !== false)){
+          document.getElementById('inscricaoPedalSelect').value = pedalAtualInscricao;
+          carregarInscricaoPorPedal(pedalAtualInscricao);
+        }
+      } else if(modoPublico === 'vestuario'){
+        abrirAba('vestuario');
+        if(vestuarioAtualPublico && cacheVestuarioEventos.some(e => e.id === vestuarioAtualPublico) && (!clienteContexto || clienteContexto.modVestuario !== false)){
+          document.getElementById('vestuarioEventoSelect').value = vestuarioAtualPublico;
+          carregarVestuarioPublico(vestuarioAtualPublico);
+        }
+      } else if(pedalAtualInscricao && cachePedais.some(p => p.id === pedalAtualInscricao) && (!clienteContexto || clienteContexto.modCiclismo !== false)){
+        abrirAba('inscricao');
+        document.getElementById('inscricaoPedalSelect').value = pedalAtualInscricao;
+        carregarInscricaoPorPedal(pedalAtualInscricao);
+      } else if(vestuarioAtualPublico && cacheVestuarioEventos.some(e => e.id === vestuarioAtualPublico) && (!clienteContexto || clienteContexto.modVestuario !== false)){
+        abrirAba('vestuario');
+        document.getElementById('vestuarioEventoSelect').value = vestuarioAtualPublico;
+        carregarVestuarioPublico(vestuarioAtualPublico);
+      } else {
+        abrirAba('admin');
+      }
+    }
+
+    iniciar();
+  </script>
+  <script src="./v3-enhancements.js"></script>
+</body>
+</html>

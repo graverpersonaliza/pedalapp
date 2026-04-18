@@ -1,0 +1,20 @@
+window.PEDALAPP_APP_CONFIG = {
+  "accessMode": "hybrid",
+  "adminPassword": "admin123",
+  "developerPassword": "Noecreate2026",
+  "adminEmail": "",
+  "developerEmail": "",
+  "persistAccess": true,
+  "useStorageUploads": true,
+  "whatsAppNumber": "",
+  "brandTitle": "PedalApp",
+  "brandSubtitle": "Ciclismo e produtos em um só lugar.",
+  "enablePWA": true,
+  "enableAuditLog": true,
+  "enableBackupTools": true,
+  "enableClientSearch": true,
+  "billingProvider": "manual",
+  "billingPublicUrl": "",
+  "supportWhatsApp": "",
+  "companyName": "PedalApp"
+};

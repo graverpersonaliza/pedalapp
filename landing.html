@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d4ff3b" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+  <title>PedalApp</title>
+  <script src="./app-config.js"></script>
+  <style>
+    :root{
+      --bg:#07111c;--bg2:#0c1522;--panel:#101a28;--panel2:#162538;--line:#26364c;
+      --text:#eef4ff;--muted:#9fb0c9;--accent:#d4ff3b;--accent2:#b8f000;--danger:#ffb347;
+      --shadow:0 18px 45px rgba(0,0,0,.28);--radius:24px;--radius2:18px
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#11233a 0%,#08111d 38%,#0a0f16 100%);color:var(--text)}
+    .wrap{max-width:1180px;margin:0 auto;padding:24px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:10px 0 18px}
+    .brand{font-size:24px;font-weight:900;letter-spacing:.2px}
+    .brand span{color:var(--accent)}
+    .chip{display:inline-block;padding:8px 12px;border-radius:999px;background:#0d1724;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700}
+    .hero{display:grid;grid-template-columns:1.08fr .92fr;gap:22px;align-items:center;padding:10px 0 20px}
+    .card{background:linear-gradient(180deg,rgba(22,34,52,.97),rgba(16,24,38,.98));border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+    .glow{position:relative;overflow:hidden}
+    .glow:before{content:"";position:absolute;inset:auto -20% 65% auto;width:240px;height:240px;background:radial-gradient(circle,rgba(212,255,59,.18),transparent 70%);pointer-events:none}
+    h1{font-size:50px;line-height:1.03;margin:12px 0 14px}
+    h2{margin:0 0 10px;font-size:31px}
+    h3{margin:0 0 10px;font-size:20px}
+    p{color:var(--muted);line-height:1.65;margin:0}
+    .lead{font-size:18px;max-width:760px}
+    .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 20px;border-radius:14px;text-decoration:none;font-weight:800;background:var(--accent);color:#111;min-height:48px;border:0;transition:.18s ease}
+    .btn:hover{filter:brightness(1.04);transform:translateY(-1px)}
+    .btn.sec{background:#1e2a3d;color:var(--text);border:1px solid #32425a}
+    .btn.third{background:transparent;color:var(--text);border:1px solid var(--line)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+    .stat{padding:16px;border-radius:16px;background:#0b1421;border:1px solid var(--line)}
+    .stat strong{display:block;font-size:25px;margin-bottom:6px;color:var(--accent)}
+    .hero-panel{display:grid;gap:14px}
+    .mini{padding:16px;border-radius:16px;background:#0b1421;border:1px solid var(--line)}
+    .section{margin-top:22px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .item{padding:18px;border-radius:18px;background:#0b1421;border:1px solid var(--line)}
+    .item p{font-size:14px}
+    .proof{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+    .quote{padding:20px;border-radius:18px;background:#0b1421;border:1px solid var(--line)}
+    .quote strong{display:block;margin-bottom:6px}
+    .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:16px}
+    .plan{padding:22px;border-radius:18px;background:#0b1421;border:1px solid var(--line);display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+    .plan.highlight{border-color:rgba(212,255,59,.45);box-shadow:0 0 0 1px rgba(212,255,59,.15) inset}
+    .plan.highlight:before{content:"Mais recomendado";position:absolute;top:12px;right:-32px;transform:rotate(34deg);background:var(--accent);color:#111;font-size:11px;font-weight:900;padding:6px 34px}
+    .tag{display:inline-block;padding:8px 12px;border-radius:999px;background:#0d1724;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700;width:max-content}
+    .price{font-size:38px;font-weight:900;line-height:1}
+    .price small{font-size:15px;font-weight:700;color:var(--muted)}
+    .list{display:grid;gap:8px}
+    .list div{padding:10px 12px;border-radius:12px;background:#0c1522;border:1px solid var(--line);font-size:14px;color:var(--text)}
+    .plan .btn{margin-top:auto}
+    .faq{display:grid;gap:14px;margin-top:16px}
+    .faq .item{padding:20px}
+    .final{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+    .notice{margin-top:14px;padding:14px 16px;border-radius:14px;background:rgba(255,179,71,.08);border:1px solid rgba(255,179,71,.26);color:#ffd9a3;font-size:14px}
+    footer{padding:30px 0 10px;color:var(--muted);font-size:13px;text-align:center}
+    @media (max-width:980px){
+      .hero,.plans,.grid,.final,.stats,.proof{grid-template-columns:1fr}
+      h1{font-size:36px}
+      h2{font-size:26px}
+      .topbar{flex-direction:column;align-items:flex-start}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">PedalApp</div>
+      <span class="chip">Sistema completo para eventos, inscrições, listas e gestão no ciclismo</span>
+    </header>
+
+    <section class="hero">
+      <div>
+        <span class="chip">Mais organização, mais profissionalismo e atendimento direto no WhatsApp</span>
+        <h1>Organize pedais, inscrições e listas de vestuário em um sistema completo e pronto para crescer.</h1>
+        <p class="lead">O PedalApp foi pensado para associações, organizadores e equipes que precisam centralizar eventos, participantes, confirmações, pedidos e listas de tamanhos sem depender de planilhas soltas e mensagens perdidas.</p>
+        <div class="cta">
+          <a class="btn" href="#planos">Ver planos</a>
+          <a class="btn sec" id="btnHeroWhatsapp" href="#contato">Falar no WhatsApp</a>
+          <a class="btn third" href="./index.html">Abrir demonstração</a>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>Eventos e inscrições</strong><span>Crie pedais, compartilhe links e concentre confirmações em um só ambiente.</span></div>
+          <div class="stat"><strong>Listas de vestuário</strong><span>Perfeito para sócios escolherem tamanho de camiseta, jaqueta, uniforme e kits.</span></div>
+          <div class="stat"><strong>Atendimento rápido</strong><span>CTA direto para WhatsApp para fechar, implantar e dar suporte com agilidade.</span></div>
+        </div>
+      </div>
+      <div class="card glow hero-panel">
+        <div class="mini">
+          <h2>O que o sistema entrega</h2>
+          <div class="list">
+            <div>Criação de pedais e eventos com link de inscrição</div>
+            <div>Gestão de participantes, confirmações e organização operacional</div>
+            <div>Listas de vestuário e escolha de tamanhos para associações e equipes</div>
+            <div>Pedidos e produtos quando a operação realmente precisar vender</div>
+            <div>Painel administrativo com estrutura profissional e pronta para evolução</div>
+          </div>
+        </div>
+        <div class="mini">
+          <h3>Ideal para</h3>
+          <p>Associações de ciclismo, grupos de pedal, organizadores de eventos, equipes e projetos que querem parar de depender de improviso e passar uma imagem mais forte e organizada.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Por que o PedalApp gera valor de verdade</h2>
+      <div class="grid" style="margin-top:16px">
+        <div class="item"><h3>Mais profissional</h3><p>Você apresenta sua associação ou operação com um sistema próprio, mais sério e com melhor percepção de valor.</p></div>
+        <div class="item"><h3>Mais clareza</h3><p>Participantes sabem onde se inscrever, confirmar presença e informar tamanho sem ficar espalhado em vários canais.</p></div>
+        <div class="item"><h3>Menos retrabalho</h3><p>Reduz listas manuais, mensagens repetidas e perda de informação na organização de pedais e vestuário.</p></div>
+        <div class="item"><h3>Base escalável</h3><p>Começa simples, mas já com estrutura para crescer com novos módulos, clientes e processos.</p></div>
+      </div>
+    </section>
+
+    <section class="card section">
+      <h2>Como isso pode ser usado na prática</h2>
+      <div class="proof">
+        <div class="quote">
+          <strong>Associação de ciclismo</strong>
+          <p>Organiza inscrições para pedais, controla presença e abre uma lista para cada sócio escolher tamanho de camiseta ou uniforme oficial.</p>
+        </div>
+        <div class="quote">
+          <strong>Equipe ou grupo de pedal</strong>
+          <p>Centraliza confirmação de participação, lista de kits, tamanhos de jaquetas e pedidos de peças especiais sem desorganização.</p>
+        </div>
+        <div class="quote">
+          <strong>Operação comercial</strong>
+          <p>Quando necessário, também suporta pedidos e produtos. Mas o foco não precisa ser venda: pode ser pura organização interna com aparência profissional.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card section" id="planos">
+      <h2>Planos sugeridos</h2>
+      <p>Escolha a versão ideal para começar. O sistema pode ser usado para gestão de eventos, inscrições, listas de vestuário e pedidos quando fizer sentido para sua operação.</p>
+      <div class="plans">
+        <div class="plan">
+          <span class="tag">Plano Básico</span>
+          <div class="price">R$ 19,90 <small>/ vitalício promocional</small></div>
+          <p>Entrada ideal para começar a organizar eventos e testar a operação com mais profissionalismo.</p>
+          <div class="list">
+            <div>Cadastro básico de pedais e inscrições</div>
+            <div>Painel inicial de gestão</div>
+            <div>Uso simples para começar rápido</div>
+          </div>
+          <a class="btn" id="btnBasico" href="#contato">Quero o Básico</a>
+        </div>
+        <div class="plan highlight">
+          <span class="tag">Plano Pro</span>
+          <div class="price">R$ 39,90 <small>/ vitalício promocional</small></div>
+          <p>Melhor custo-benefício para associações e grupos que querem centralizar inscrições, listas e rotina de gestão.</p>
+          <div class="list">
+            <div>Gestão de pedais e inscrições</div>
+            <div>Organização de listas de vestuário e tamanhos</div>
+            <div>Melhor estrutura para atendimento e operação</div>
+          </div>
+          <a class="btn" id="btnPro" href="#contato">Quero o Pro</a>
+        </div>
+        <div class="plan">
+          <span class="tag">Plano Premium</span>
+          <div class="price">R$ 59,90 <small>/ vitalício promocional</small></div>
+          <p>Para quem quer a entrega mais forte, com maior percepção de valor e base pronta para evoluções futuras.</p>
+          <div class="list">
+            <div>Sistema completo com foco operacional e comercial</div>
+            <div>Mais valor percebido para sua marca ou associação</div>
+            <div>Estrutura preparada para expansão</div>
+          </div>
+          <a class="btn" id="btnPremium" href="#contato">Quero o Premium</a>
+        </div>
+      </div>
+      <div class="notice">Oferta promocional sujeita a ajuste a qualquer momento. Ideal para fechar agora e implantar com uma apresentação mais profissional.</div>
+    </section>
+
+    <section class="card section">
+      <h2>Perguntas frequentes</h2>
+      <div class="faq">
+        <div class="item"><h3>Serve só para vender produtos?</h3><p>Não. Ele também serve muito bem para organizar listas de vestuário, escolha de tamanhos, controle de kits e confirmação de sócios ou participantes.</p></div>
+        <div class="item"><h3>Serve para associações de ciclismo?</h3><p>Sim. Essa é uma das aplicações mais fortes, porque ajuda a organizar eventos, inscrições e demandas internas com mais clareza.</p></div>
+        <div class="item"><h3>Posso começar simples e depois crescer?</h3><p>Sim. A estrutura foi pensada para começar rápido e continuar evoluindo conforme sua operação amadurece.</p></div>
+      </div>
+    </section>
+
+    <section class="card section" id="contato">
+      <div class="final">
+        <div>
+          <h2>Quer implantar o PedalApp no seu grupo, equipe ou associação?</h2>
+          <p>Fale agora no WhatsApp e receba atendimento direto para demonstração, implantação ou contratação do plano ideal.</p>
+        </div>
+        <a class="btn" id="btnContatoFinal" href="https://wa.me/5554999778707?text=Ol%C3%A1%2C%20quero%20conhecer%20o%20PedalApp">Chamar no WhatsApp</a>
+      </div>
+    </section>
+
+    <footer>
+      PedalApp • sistema completo para gestão de pedais, inscrições, listas de vestuário e pedidos quando necessário.
+    </footer>
+  </div>
+
+  <script>
+    const cfg = window.PEDALAPP_APP_CONFIG || {};
+    const wa = (cfg.supportWhatsApp || cfg.whatsAppNumber || '5554999778707').replace(/\D/g, '');
+    const baseText = 'Olá, quero conhecer o PedalApp';
+    const setLink = (id, text) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.href = `https://wa.me/${wa}?text=${encodeURIComponent(text)}`;
+    };
+
+    document.title = cfg.brandTitle ? `${cfg.brandTitle} | Sistema completo para ciclismo` : 'PedalApp | Sistema completo para ciclismo';
+    setLink('btnHeroWhatsapp', `${baseText} e entender como usar em pedais, inscrições e listas de vestuário.`);
+    setLink('btnBasico', `${baseText}. Tenho interesse no Plano Básico de R$ 19,90.`);
+    setLink('btnPro', `${baseText}. Tenho interesse no Plano Pro de R$ 39,90.`);
+    setLink('btnPremium', `${baseText}. Tenho interesse no Plano Premium de R$ 59,90.`);
+    setLink('btnContatoFinal', `${baseText}. Quero atendimento no WhatsApp.`);
+  </script>
+</body>
+</html>

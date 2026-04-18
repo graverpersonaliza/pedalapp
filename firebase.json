@@ -1,0 +1,80 @@
+{
+  "functions": {
+    "source": "functions"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "README.md",
+      "PLANO_6_PONTOS.md",
+      "PUBLICAR_GITHUB_FIREBASE.md",
+      "VALIDACAO_6_PONTOS.md",
+      ".firebaserc.example",
+      "app-config.example.js",
+      "firebase-config.example.js",
+      "firestore.rules",
+      "storage.rules",
+      "firestore.rules.secure-template",
+      "storage.rules.secure-template",
+      "firestore.indexes.json",
+      "CHECKLIST_100_V3.md",
+      "DEPLOY_V3_COMPLETO.md",
+      "SEGURANCA_V3.md",
+      "BILLING_V3.md",
+      "MELHORIAS_V3.md",
+      "functions/**",
+      ".github/**",
+      "firestore.rules.production-ready",
+      "storage.rules.production-ready"
+    ],
+    "cleanUrls": true,
+    "headers": [
+      {
+        "source": "**/*.@(jpg|jpeg|gif|png|webp|svg)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=3600"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=600"
+          }
+        ]
+      },
+      {
+        "source": "**/*.webmanifest",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/manifest+json"
+          }
+        ]
+      },
+      {
+        "source": "sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

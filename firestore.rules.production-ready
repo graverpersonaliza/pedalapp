@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isDeveloper() {
+      return signedIn() && request.auth.token.developer == true;
+    }
+    function isClientAdmin(slug) {
+      return signedIn() && request.auth.token.clientAdmin == true && request.auth.token.clientSlug == slug;
+    }
+
+    match /developer_clients/{clientId} {
+      allow read: if isDeveloper();
+      allow write: if isDeveloper();
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isDeveloper() || (signedIn() && request.resource.data.clienteSlug == request.auth.token.clientSlug);
+      match /inscritos/{inscritoId} {
+        allow read: if true;
+        allow create: if true;
+        allow update, delete: if isDeveloper() || isClientAdmin(resource.data.clienteSlug);
+      }
+    }
+
+    match /vestuario_events/{eventId} {
+      allow read: if true;
+      allow write: if isDeveloper() || (signedIn() && request.resource.data.clienteSlug == request.auth.token.clientSlug);
+      match /escolhas/{escolhaId} {
+        allow read: if true;
+        allow create: if true;
+        allow update, delete: if isDeveloper() || isClientAdmin(resource.data.clienteSlug);
+      }
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isDeveloper();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /billing_webhooks/{docId} {
+      allow read, write: if isDeveloper();
+    }
+  }
+}

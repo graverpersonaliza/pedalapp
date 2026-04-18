@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regra funcional para a V2 em fase de implantação.
+    // Quando migrar totalmente para Firebase Auth, endureça estas permissões.
+    match /developer_clients/{clientId} {
+      allow read, write: if true;
+    }
+
+    match /events/{eventId} {
+      allow read, write: if true;
+      match /inscritos/{inscritoId} {
+        allow read, write: if true;
+      }
+    }
+
+    match /vestuario_events/{eventId} {
+      allow read, write: if true;
+      match /escolhas/{escolhaId} {
+        allow read, write: if true;
+      }
+    }
+  }
+}
